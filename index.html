@@ -1,87 +1,657 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" >
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <title>Meal Master AI - Weekly Planner</title>
-
-  <!-- PWA & Apple meta tags -->
-  <link rel="manifest" href="manifest.json" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>MealMapper - ChefBot AI Chat</title>
+  <meta name="author" content="Joshua The" />
+  <meta name="description" content="Meal planning app with AI chat powered by Google Gemini" />
+  
+  <!-- Apple PWA meta tags -->
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <meta name="apple-mobile-web-app-title" content="Meal Master AI" />
-  <link rel="apple-touch-icon" href="logo.png" />
+  <meta name="apple-mobile-web-app-title" content="MealMapper" />
+  
+  <!-- Material Symbols for AI chat icon -->
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
 
-  <!-- Dark Mode base styles -->
   <style>
-    :root {
-      color-scheme: dark;
-      background-color: #121212;
-      color: #eee;
-      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    /* ==== CSS styles ==== */
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen,
+        Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
+      margin: 0;
+      background: #fafafa;
+      color: #1d1d1f;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      user-select: none;
+    }
+
+    input, button, textarea {
+      font-family: inherit;
+      font-size: 1rem;
+      outline-offset: 2px;
+    }
+
+    button {
+      cursor: pointer;
+      border-radius: 8px;
+      border: none;
+      background-color: #007aff;
+      color: white;
+      padding: 0.5rem 1rem;
+      font-weight: 600;
+      transition: background-color 0.3s ease;
+    }
+    button:hover {
+      background-color: #005bb5;
+    }
+
+    /* Login Screen */
+    #login-screen {
+      padding: 24px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 12px;
+      background: white;
+      height: 100vh;
+      box-sizing: border-box;
+    }
+    #login-screen input {
+      flex-grow: 1;
+      padding: 0.5rem;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+    }
+
+    /* Welcome Screen */
+    #welcome-screen {
+      display: none;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      font-size: 1.75rem;
+      font-weight: 600;
+      color: #007aff;
+      transition: opacity 0.5s ease;
+      padding: 20px;
+      box-sizing: border-box;
+      text-align: center;
+    }
+
+    /* Main App Screen */
+    #app-screen {
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 20px;
+      display: none;
+    }
+
+    h2 {
+      margin-top: 0;
+      font-weight: 700;
+      color: #1d1d1f;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 12px;
+      user-select: none;
+    }
+    table th,
+    table td {
+      border: 1px solid #ccc;
+      padding: 8px;
+      text-align: center;
+      vertical-align: middle;
+    }
+
+    table input[type="text"] {
+      width: 90%;
+      padding: 6px 8px;
+      font-size: 1rem;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      box-sizing: border-box;
+    }
+
+    table input[type="range"] {
+      width: 90%;
+      cursor: pointer;
+      border-radius: 6px;
+      margin-top: 6px;
+      -webkit-appearance: none;
+      height: 8px;
+      background: linear-gradient(to right, #f44336, #ffeb3b);
+      outline: none;
+    }
+
+    /* Slider colors handled in JS */
+
+    .slider-icons {
+      font-size: 1.3rem;
+      display: flex;
+      justify-content: space-between;
+      padding: 0 5px;
+      user-select: none;
+      margin-top: 3px;
+    }
+
+    #save-meals {
+      margin-top: 12px;
+      width: 100%;
+      font-size: 1.1rem;
+    }
+
+    #save-message {
+      margin-top: 8px;
+      min-height: 20px;
+      color: #34c759;
+      font-weight: 600;
+      text-align: center;
+      user-select: none;
+    }
+
+    /* === Chatbot styles === */
+
+    .chatbot {
+      position: fixed;
+      bottom: 80px;
+      right: 20px;
+      width: 320px;
+      max-height: 460px;
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0 12px 28px rgba(0, 0, 0, 0.15);
+      display: none;
+      flex-direction: column;
+      overflow: hidden;
+      font-size: 14px;
+      color: #1d1d1f;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    .chatbot header {
+      background: #007aff;
+      color: white;
+      font-weight: 700;
+      padding: 14px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 1.1rem;
+      user-select: none;
+    }
+
+    .chatbot .close-btn {
+      font-size: 24px;
+      background: transparent;
+      border: none;
+      color: white;
+      cursor: pointer;
+      line-height: 1;
+      font-weight: 700;
+      border-radius: 50%;
+      width: 36px;
+      height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background-color 0.3s ease;
+    }
+    .chatbot .close-btn:hover {
+      background-color: rgba(255, 255, 255, 0.2);
+    }
+
+    .chatbox {
+      list-style: none;
+      margin: 0;
+      padding: 12px 16px;
+      overflow-y: auto;
+      flex-grow: 1;
+      height: 320px;
+      border-top: 1px solid #eee;
+      border-bottom: 1px solid #eee;
+      scrollbar-width: thin;
+      scrollbar-color: #bbb transparent;
+    }
+    .chatbox::-webkit-scrollbar {
+      width: 6px;
+    }
+    .chatbox::-webkit-scrollbar-thumb {
+      background-color: #bbb;
+      border-radius: 3px;
+    }
+
+    .chatbox li.chat {
+      margin-bottom: 14px;
+      display: flex;
+      align-items: flex-start;
+      line-height: 1.3;
+    }
+
+    .chatbox li.outgoing {
+      justify-content: flex-end;
+    }
+
+    .chatbox li.outgoing p {
+      background: #007aff;
+      color: white;
+      padding: 10px 16px;
+      border-radius: 20px 20px 0 20px;
+      max-width: 70%;
+      word-wrap: break-word;
+      font-weight: 600;
+      user-select: text;
+    }
+
+    .chatbox li.incoming span.material-symbols-outlined {
+      font-size: 20px;
+      margin-right: 10px;
+      color: #007aff;
+      user-select: none;
+      flex-shrink: 0;
+      margin-top: 3px;
+    }
+
+    .chatbox li.incoming p {
+      background: #f0f0f5;
+      color: #1d1d1f;
+      padding: 10px 16px;
+      border-radius: 20px 20px 20px 0;
+      max-width: 70%;
+      word-wrap: break-word;
+      font-weight: 500;
+      user-select: text;
+      white-space: pre-wrap;
+    }
+
+    .chatbox li p.error {
+      color: #ff3b30;
+      font-weight: 700;
+    }
+
+    .chat-input {
+      display: flex;
+      padding: 12px 16px;
+      background: #fafafa;
+      align-items: center;
+      border-top: 1px solid #eee;
+    }
+
+    .chat-input textarea {
+      flex-grow: 1;
+      resize: none;
+      padding: 8px 12px;
+      font-size: 14px;
+      border: 1px solid #ccc;
+      border-radius: 18px;
+      max-height: 90px;
+      min-height: 36px;
+      line-height: 1.3;
+      font-family: inherit;
+      user-select: text;
+      overflow-y: auto;
+    }
+
+    .chat-input span {
+      cursor: pointer;
+      margin-left: 12px;
+      font-weight: 700;
+      font-size: 22px;
+      color: #007aff;
+      user-select: none;
+      padding: 8px 12px;
+      border-radius: 50%;
+      transition: background-color 0.3s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      user-select: none;
+    }
+
+    .chat-input span:hover {
+      background-color: #e1eaff;
+    }
+
+    /* Show chatbot */
+    body.show-chatbot .chatbot {
+      display: flex;
+    }
+
+    /* Responsive: input expands on mobile */
+    @media (max-width: 500px) {
+      .chatbot {
+        width: 90vw;
+        right: 5vw;
+        bottom: 60px;
+        max-height: 400px;
+      }
+      #app-screen {
+        padding: 12px;
+      }
     }
   </style>
-
-  <link rel="stylesheet" href="styles.css" />
-
-  <!-- Load transformers.js for AI chat -->
-  <script type="module" src="https://cdn.jsdelivr.net/npm/@xenova/transformers@2.3.0/dist/transformers.min.js"></script>
 </head>
 <body>
 
-  <!-- LOGIN SCREEN -->
-  <div id="login-screen" class="screen centered">
-    <h1>🥗 Meal Master AI</h1>
-    <input type="text" id="username" placeholder="Enter your name..." autocomplete="off" />
-    <button id="login-btn">Enter</button>
+<!-- LOGIN -->
+<div id="login-screen">
+  <input id="username" type="text" placeholder="Enter your name" autocomplete="off" />
+  <button id="login-btn">Login</button>
+</div>
+
+<!-- WELCOME -->
+<div id="welcome-screen">
+  <div id="greeting"></div>
+</div>
+
+<!-- APP -->
+<div id="app-screen">
+
+  <h2>Meal Planner</h2>
+  <table id="meal-table" border="1" aria-label="Meal Planner Table">
+    <thead>
+      <tr>
+        <th scope="col">Day</th>
+        <th scope="col">Breakfast</th>
+        <th scope="col">Lunch</th>
+        <th scope="col">Dinner</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+  <button id="save-meals" aria-label="Save Meal Plan">Save Meals</button>
+  <div id="save-message" aria-live="polite" aria-atomic="true"></div>
+
+  <button class="chatbot-toggler" aria-label="Open Chat with ChefBot" title="Chat with ChefBot">Chat AI</button>
+</div>
+
+<!-- CHATBOT -->
+<div class="chatbot" role="dialog" aria-modal="true" aria-label="ChefBot AI Chat">
+  <header>
+    <span>ChefBot</span>
+    <button class="close-btn" aria-label="Close chat">×</button>
+  </header>
+
+  <ul class="chatbox" role="log" aria-live="polite" aria-relevant="additions"></ul>
+
+  <div class="chat-input">
+    <textarea placeholder="Type your message..." rows="1" aria-label="Chat message input"></textarea>
+    <span role="button" tabindex="0" aria-label="Send message">➤</span>
   </div>
+</div>
 
-  <!-- WELCOME SCREEN -->
-  <div id="welcome-screen" class="screen centered" style="display:none;">
-    <h2 id="greeting"></h2>
-  </div>
+<script>
+  // === Your custom greetings ===
+  const greetings = [
+    "Welcome back, NAME!",
+    "NAME returns!",
+    "Ready when you are, NAME.",
+    "Let’s cook up something good, NAME!",
+    "Good to see you, NAME!",
+    "Let’s get planning, NAME!",
+    "Chef NAME is in the house!",
+    "Meal time magic starts now, NAME!"
+  ];
 
-  <!-- MAIN APP SCREEN -->
-  <div id="app-screen" style="display:none;">
-    <header>
-      <h2>Weekly Meal Planner</h2>
-    </header>
+  const days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+  const meals = ["Breakfast", "Lunch", "Dinner"];
 
-    <table id="meal-table" aria-label="Weekly meal planner">
-      <thead>
-        <tr>
-          <th>Day</th>
-          <th>Breakfast</th>
-          <th>Lunch</th>
-          <th>Dinner</th>
-        </tr>
-      </thead>
-      <tbody></tbody>
-    </table>
+  // Initial variables
+  let aiChatVisible = false;
+  let messageHistory = [];
+  let isFirstMessage = true;
 
-    <button id="save-meals">Save Meal Plan</button>
+  // API key & URL for Gemini (replace with your own key)
+  const API_KEY = "AIzaSyBmvvOHdCEkqg8UYVh2tVoe2EFEV5rLYvE"; // Use your own in production
+  const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`;
 
-    <div id="save-message" aria-live="polite" role="alert"></div>
+  // Cached DOM elements
+  const loginScreen = document.getElementById("login-screen");
+  const welcomeScreen = document.getElementById("welcome-screen");
+  const appScreen = document.getElementById("app-screen");
+  const greetingEl = document.getElementById("greeting");
+  const chatToggler = document.querySelector(".chatbot-toggler");
+  const closeBtn = document.querySelector(".close-btn");
+  const chatbox = document.querySelector(".chatbox");
+  const chatInput = document.querySelector(".chat-input textarea");
+  const sendChatBtn = document.querySelector(".chat-input span");
+  const saveBtn = document.getElementById("save-meals");
+  const saveMessage = document.getElementById("save-message");
 
-    <!-- AI Chat Toggle Button -->
-    <button id="chat-toggle" aria-label="Toggle AI chat">💬 AI Chat</button>
+  // === On window load ===
+  window.onload = () => {
+    if (localStorage.getItem("username")) {
+      showWelcome();
+    }
+    loginScreen.querySelector("#login-btn").onclick = login;
+    saveBtn.onclick = saveMealsToStorage;
+    chatToggler.onclick = toggleChat;
+    sendChatBtn.onclick = handleChat;
+    closeBtn.onclick = () => {
+      document.body.classList.remove("show-chatbot");
+      aiChatVisible = false;
+    };
 
-    <!-- AI Chat Window (hidden by default) -->
-    <div id="ai-chat" aria-live="polite" aria-atomic="false" style="display:none;">
-      <div id="chat-messages" role="log" aria-live="polite" aria-relevant="additions"></div>
-      <form id="chat-form" autocomplete="off" aria-label="AI chat form">
-        <input
-          id="chat-input"
-          type="text"
-          placeholder="Ask AI about your meals..."
-          aria-label="Type your message"
-          required
-        />
-        <button type="submit" aria-label="Send message">Send</button>
-      </form>
-    </div>
-  </div>
+    chatInput.addEventListener("input", () => {
+      chatInput.style.height = "auto";
+      chatInput.style.height = chatInput.scrollHeight + "px";
+    });
 
-  <script type="module" src="app.js"></script>
+    chatInput.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" && !e.shiftKey) {
+        e.preventDefault();
+        handleChat();
+      }
+    });
+  };
+
+  // Login function
+  function login() {
+    const name = document.getElementById("username").value.trim();
+    if (!name) return alert("Please enter your name.");
+    localStorage.setItem("username", name);
+    showWelcome();
+  }
+
+  // Show welcome and meal planner UI
+  function showWelcome() {
+    loginScreen.style.display = "none";
+    const name = localStorage.getItem("username");
+    const greet = greetings[Math.floor(Math.random() * greetings.length)].replace("NAME", name);
+    greetingEl.textContent = greet;
+    welcomeScreen.style.display = "flex";
+    setTimeout(() => {
+      welcomeScreen.style.opacity = 0;
+      setTimeout(() => {
+        welcomeScreen.style.display = "none";
+        appScreen.style.display = "block";
+        buildTable();
+        loadMealsFromStorage();
+      }, 500);
+    }, 2500);
+  }
+
+  // Build meal table inputs and sliders
+  function buildTable() {
+    const tbody = document.querySelector("#meal-table tbody");
+    tbody.innerHTML = "";
+    days.forEach(day => {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `<td>${day}</td>` + meals.map(m => `
+        <td>
+          <input class="meal-input" type="text" id="${day}-${m}" placeholder="${m}" autocomplete="off"/>
+          <input class="health-slider" type="range" min="0" max="100" id="${day}-${m}-score" />
+          <div class="slider-icons">
+            <span>🥗</span><span>🍜</span><span>🍩</span>
+          </div>
+        </td>
+      `).join("");
+      tbody.appendChild(tr);
+
+      meals.forEach(m => {
+        const slider = document.getElementById(`${day}-${m}-score`);
+        slider.oninput = () => updateSlider(slider);
+      });
+    });
+  }
+
+  // Update slider background color based on value
+  function updateSlider(slider) {
+    const val = slider.value;
+    if (val < 40)
+      slider.style.background = "linear-gradient(to right, #f44336, #ffeb3b)";
+    else if (val < 70)
+      slider.style.background = "linear-gradient(to right, #ffeb3b, #4caf50)";
+    else
+      slider.style.background = "#4caf50";
+    saveMealsToStorage();
+  }
+
+  // Save meals to localStorage
+  function saveMealsToStorage() {
+    const data = {};
+    days.forEach(day => {
+      data[day] = {};
+      meals.forEach(m => {
+        const text = document.getElementById(`${day}-${m}`).value || "";
+        const score = document.getElementById(`${day}-${m}-score`).value || 50;
+        data[day][m] = { text, score: +score };
+      });
+    });
+    localStorage.setItem("meals", JSON.stringify(data));
+    saveMessage.textContent = "Meal plan saved!";
+    setTimeout(() => (saveMessage.textContent = ""), 2000);
+  }
+
+  // Load meals from localStorage
+  function loadMealsFromStorage() {
+    const saved = JSON.parse(localStorage.getItem("meals") || "{}");
+    days.forEach(day =>
+      meals.forEach(m => {
+        document.getElementById(`${day}-${m}`).value = saved[day]?.[m]?.text || "";
+        const s = saved[day]?.[m]?.score;
+        if (s != null) {
+          const slider = document.getElementById(`${day}-${m}-score`);
+          slider.value = s;
+          updateSlider(slider);
+        }
+      })
+    );
+  }
+
+  // Toggle chatbot display
+  function toggleChat() {
+    aiChatVisible = !aiChatVisible;
+    if (aiChatVisible) {
+      document.body.classList.add("show-chatbot");
+      chatInput.focus();
+
+      // If first message, show welcome message from ChefBot automatically
+      if (isFirstMessage) {
+        appendMessage(
+          "Hi! I’m ChefBot, created by Joshua The. How can I assist you today?",
+          "incoming"
+        );
+        isFirstMessage = false;
+        messageHistory.push({
+          role: "model",
+          text: "Hi! I’m ChefBot, created by Joshua The. How can I assist you today?"
+        });
+      }
+    } else {
+      document.body.classList.remove("show-chatbot");
+    }
+  }
+
+  // Append chat message to chatbox
+  function appendMessage(text, cls) {
+    const li = document.createElement("li");
+    li.classList.add("chat", cls);
+    if (cls === "incoming") {
+      li.innerHTML = `<span class="material-symbols-outlined">smart_toy</span><p></p>`;
+      li.querySelector("p").textContent = text;
+    } else {
+      li.textContent = text;
+    }
+    chatbox.appendChild(li);
+    chatbox.scrollTop = chatbox.scrollHeight;
+  }
+
+  // Handle user message input + send to Gemini API
+  async function handleChat() {
+    const userMessage = chatInput.value.trim();
+    if (!userMessage) return;
+    chatInput.value = "";
+    chatInput.style.height = "auto";
+
+    appendMessage(userMessage, "outgoing");
+
+    // Add user message to history for context
+    messageHistory.push({ role: "user", text: userMessage });
+
+    // Show Thinking... message
+    const thinkingMsg = document.createElement("li");
+    thinkingMsg.classList.add("chat", "incoming");
+    thinkingMsg.innerHTML =
+      `<span class="material-symbols-outlined">smart_toy</span><p>Thinking...</p>`;
+    chatbox.appendChild(thinkingMsg);
+    chatbox.scrollTop = chatbox.scrollHeight;
+
+    // Build request payload for Gemini API
+    const requestBody = {
+      temperature: 0.6,
+      candidateCount: 1,
+      topP: 0.95,
+      maxOutputTokens: 250,
+      // Send conversation history as contents
+      // Gemini expects array of messages with role + parts (array with text)
+      // We'll send all history including system prompt as first message
+      // The system prompt instructs the AI about its creator and purpose
+      // (this is your "hidden tuning message")
+      prompt: {
+        context: "You are ChefBot, an AI created by Joshua The to help with meal planning and answer questions. Always be friendly and helpful.",
+        messages: messageHistory.map((m) => ({
+          author: m.role === "user" ? "user" : "assistant",
+          content: { text: m.text },
+        })),
+      },
+    };
+
+    try {
+      const res = await fetch(API_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(requestBody),
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error?.message || "API error");
+      }
+      const data = await res.json();
+
+      // Remove "Thinking..." message
+      thinkingMsg.remove();
+
+      // Get response text from API
+      const aiResponse =
+        data.candidates?.[0]?.content?.text || "Sorry, I can't answer that.";
+
+      appendMessage(aiResponse, "incoming");
+
+      // Add AI response to history
+      messageHistory.push({ role: "model", text: aiResponse });
+    } catch (error) {
+      thinkingMsg.remove();
+      appendMessage(`Error: ${error.message}`, "incoming error");
+    }
+  }
+</script>
 </body>
 </html>
