@@ -2,9 +2,9 @@ const greetings = [
     "Welcome back, NAME!",
     "NAME returns!",
     "Ready when you are, NAME.",
-    "Let’s cook up something good, NAME!",
+    "Let's cook up something good, NAME!",
     "Good to see you, NAME!",
-    "Let’s get planning, NAME!",
+    "Let's get planning, NAME!",
     "Chef NAME is in the house!",
     "Meal time magic starts now, NAME!"
   ];
@@ -16,9 +16,8 @@ const greetings = [
   let isFirstMessage = true;
   let aiChatVisible = false;
   
-  // Replace with your real API key here
-const API_KEY = "AIzaSyBmvvOHdCEkqg8UYVh2tVoe2EFEV5rLYvE"; //API key 
-  const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateMessage?key=${API_KEY}`;
+  const API_KEY = "AIzaSyBmvvOHdCEkqg8UYVh2tVoe2EFEV5rLYvE";
+  const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${API_KEY}`;
   
   window.onload = () => {
     const username = localStorage.getItem("username");
@@ -34,11 +33,21 @@ const API_KEY = "AIzaSyBmvvOHdCEkqg8UYVh2tVoe2EFEV5rLYvE"; //API key
     document.querySelector(".chatbot-toggler").onclick = toggleChat;
     document.querySelector(".close-btn").onclick = closeChat;
   
-    document.getElementById("chat-input").addEventListener("keydown", e => {
+    const chatInput = document.getElementById("chat-input");
+    chatInput.addEventListener("keydown", e => {
       if (e.key === "Enter" && !e.shiftKey) {
         e.preventDefault();
         handleChat();
       }
+    });
+  
+    // Handle virtual keyboard appearance
+    chatInput.addEventListener('focus', () => {
+      document.querySelector('.chatbot').classList.add('keyboard-visible');
+    });
+    
+    chatInput.addEventListener('blur', () => {
+      document.querySelector('.chatbot').classList.remove('keyboard-visible');
     });
   
     document.querySelector(".chat-input span[role='button']").onclick = handleChat;
@@ -61,7 +70,6 @@ const API_KEY = "AIzaSyBmvvOHdCEkqg8UYVh2tVoe2EFEV5rLYvE"; //API key
     greetElem.textContent = greet;
     ws.style.opacity = "1";
   
-    // After 3 seconds, switch to main app screen
     setTimeout(() => {
       showScreen("app-screen");
       buildTable();
@@ -80,28 +88,35 @@ const API_KEY = "AIzaSyBmvvOHdCEkqg8UYVh2tVoe2EFEV5rLYvE"; //API key
     tbody.innerHTML = "";
     days.forEach(day => {
       const tr = document.createElement("tr");
-      tr.innerHTML = `<td>${day}</td>` + meals.map(m => `
-        <td>
-          <input class="meal-input" type="text" id="${day}-${m}" placeholder="${m}" />
-          <input class="health-slider" type="range" min="0" max="100" id="${day}-${m}-score" />
-          <div class="slider-icons">
-            <span>Unhealthy</span><span>Healthy</span>
-          </div>
-        </td>
-      `).join("");
+      tr.innerHTML = `
+        <td>${day}</td>
+        ${meals.map(m => `
+          <td class="meal-cell">
+            <input class="meal-input" type="text" id="${day}-${m}" placeholder="${m}" />
+            <div class="slider-container">
+              <input class="health-slider" type="range" min="0" max="100" value="50" id="${day}-${m}-score" />
+              <div class="slider-value" id="${day}-${m}-value">50%</div>
+            </div>
+          </td>
+        `).join("")}
+      `;
       tbody.appendChild(tr);
   
       meals.forEach(m => {
         const slider = document.getElementById(`${day}-${m}-score`);
-        slider.oninput = () => updateSlider(slider);
+        const valueDisplay = document.getElementById(`${day}-${m}-value`);
+        slider.oninput = () => {
+          valueDisplay.textContent = `${slider.value}%`;
+          valueDisplay.style.color = getHealthColor(slider.value);
+        };
       });
     });
   }
   
-  function updateSlider(slider) {
-    const val = slider.value;
-    // color gradient handled by CSS background
-    // no JS needed unless you want dynamic color changes
+  function getHealthColor(value) {
+    if (value < 30) return "#f44336";
+    if (value < 70) return "#ffeb3b";
+    return "#4caf50";
   }
   
   function saveMealsToStorage() {
@@ -128,19 +143,22 @@ const API_KEY = "AIzaSyBmvvOHdCEkqg8UYVh2tVoe2EFEV5rLYvE"; //API key
       meals.forEach(m => {
         if (mealData[day] && mealData[day][m]) {
           document.getElementById(`${day}-${m}`).value = mealData[day][m].meal;
-          document.getElementById(`${day}-${m}-score`).value = mealData[day][m].healthScore;
+          const slider = document.getElementById(`${day}-${m}-score`);
+          const valueDisplay = document.getElementById(`${day}-${m}-value`);
+          slider.value = mealData[day][m].healthScore;
+          valueDisplay.textContent = `${slider.value}%`;
+          valueDisplay.style.color = getHealthColor(slider.value);
         }
       });
     });
   }
   
-  // -----------------------
-  // AI Chatbot functions
-  // -----------------------
-  
   function toggleChat() {
     aiChatVisible = !aiChatVisible;
     document.body.classList.toggle("show-chatbot", aiChatVisible);
+    if (aiChatVisible) {
+      document.getElementById("chat-input").focus();
+    }
   }
   
   function closeChat() {
@@ -162,45 +180,35 @@ const API_KEY = "AIzaSyBmvvOHdCEkqg8UYVh2tVoe2EFEV5rLYvE"; //API key
   
   async function generateResponse(chatElement) {
     const messageElement = chatElement.querySelector("p");
-  
-    // Add user's message to history
-    const userMessage = messageHistory[messageHistory.length - 1].content.text;
-    
-    // Prepare messages for Gemini API (user + assistant)
-    // Include chat history, max last 6 messages for context
-    const messagesForAPI = messageHistory.slice(-6);
-  
-    const body = {
-      messages: messagesForAPI,
-      temperature: 0.7,
-      candidateCount: 1,
-      maxOutputTokens: 256
-    };
+    const userMessage = messageHistory[messageHistory.length - 1].parts[0].text;
   
     try {
       const response = await fetch(API_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
+        body: JSON.stringify({
+          contents: [{
+            parts: [{
+              text: `You are ChefBot, a helpful cooking assistant. Be concise. ${userMessage}`
+            }]
+          }]
+        }),
       });
   
       const data = await response.json();
-  
       if (!response.ok) throw new Error(data.error?.message || "API Error");
   
-      const botReply = data.candidates?.[0]?.message?.content?.text || "No response";
-  
+      const botReply = data.candidates?.[0]?.content?.parts?.[0]?.text || "I couldn't generate a response.";
       messageElement.textContent = botReply;
   
-      // Add bot reply to message history
       messageHistory.push({
-        author: "assistant",
-        content: { text: botReply },
+        role: "model",
+        parts: [{ text: botReply }]
       });
   
     } catch (error) {
       messageElement.classList.add("error");
-      messageElement.textContent = error.message;
+      messageElement.textContent = "Error: " + error.message;
     } finally {
       chatElement.scrollIntoView({ behavior: "smooth", block: "end" });
     }
@@ -214,25 +222,19 @@ const API_KEY = "AIzaSyBmvvOHdCEkqg8UYVh2tVoe2EFEV5rLYvE"; //API key
     input.value = "";
     input.style.height = "auto";
   
-    // Show user message
     const chatbox = document.getElementById("chat-messages");
     const userLi = createChatLi(text, "outgoing");
     chatbox.appendChild(userLi);
     chatbox.scrollTop = chatbox.scrollHeight;
   
-    // Add user message to history
     messageHistory.push({
-      author: "user",
-      content: { text },
+      role: "user",
+      parts: [{ text }]
     });
   
-    // Show "Thinking..."
     const thinkingLi = createChatLi("Thinking...", "incoming");
     chatbox.appendChild(thinkingLi);
     chatbox.scrollTop = chatbox.scrollHeight;
   
-    // Get bot response
     generateResponse(thinkingLi);
   }
-  
-  
