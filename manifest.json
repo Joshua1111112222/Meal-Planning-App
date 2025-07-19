@@ -1,6 +1,6 @@
 {
-    "name": "Meal Master Planner",
-    "short_name": "Meal Master Planner",
+    "name": "MealMapper",
+    "short_name": "MealMapper",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#121212",
