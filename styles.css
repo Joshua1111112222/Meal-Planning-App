@@ -1,21 +1,34 @@
-* {
+/* ===== BASE STYLES ===== */
+:root {
+    --primary-color: #4caf50;
+    --primary-dark: #388e3c;
+    --primary-light: #81c784;
+    --secondary-color: #ff9800;
+    --danger-color: #f44336;
+    --light-color: #f5f5f5;
+    --dark-color: #212121;
+    --gray-color: #757575;
+    --white: #ffffff;
+    --shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  }
+  
+  * {
     box-sizing: border-box;
     margin: 0;
     padding: 0;
   }
   
   body {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, 
-                Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
-    background-color: #121212;
-    color: #e0e0e0;
+    font-family: 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', sans-serif;
+    background-color: var(--light-color);
+    color: var(--dark-color);
+    line-height: 1.6;
     min-height: 100vh;
-    line-height: 1.5;
   }
   
+  /* ===== SCREEN CONTAINERS ===== */
   .screen {
     display: none;
-    flex-direction: column;
     padding: 1rem;
     max-width: 1200px;
     margin: 0 auto;
@@ -23,93 +36,113 @@
   
   .center-screen {
     display: flex;
-    justify-content: center;
+    flex-direction: column;
     align-items: center;
-    height: 100vh;
+    justify-content: center;
+    min-height: 100vh;
     text-align: center;
+    padding: 2rem;
+  }
+  
+  /* ===== LOGIN SCREEN ===== */
+  #login-screen {
+    background-color: var(--white);
+    border-radius: 12px;
+    box-shadow: var(--shadow);
+    padding: 3rem 2rem;
+    width: 100%;
+    max-width: 500px;
   }
   
   #login-screen h1 {
+    color: var(--primary-dark);
     margin-bottom: 2rem;
-    font-size: 2.5rem;
-    color: #4caf50;
+    font-size: 2.2rem;
+    font-weight: 700;
   }
   
   #login-screen input {
-    padding: 0.75rem 1rem;
-    font-size: 1.2rem;
-    margin-bottom: 1rem;
-    width: 80%;
-    max-width: 300px;
-    background: #2a2a2a;
-    border: 1px solid #444;
+    width: 100%;
+    padding: 1rem;
+    margin-bottom: 1.5rem;
+    border: 2px solid #e0e0e0;
     border-radius: 8px;
-    color: white;
-    transition: border-color 0.3s;
+    font-size: 1rem;
+    transition: all 0.3s ease;
   }
   
   #login-screen input:focus {
     outline: none;
-    border-color: #4caf50;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.2);
   }
   
   #login-screen button {
-    padding: 0.75rem 1.5rem;
-    font-size: 1.2rem;
-    background: #4caf50;
+    width: 100%;
+    padding: 1rem;
+    background-color: var(--primary-color);
+    color: var(--white);
     border: none;
     border-radius: 8px;
-    color: white;
+    font-size: 1.1rem;
+    font-weight: 600;
     cursor: pointer;
-    transition: background-color 0.3s;
+    transition: background-color 0.3s ease;
   }
   
   #login-screen button:hover {
-    background: #3e8e41;
+    background-color: var(--primary-dark);
   }
   
+  /* ===== WELCOME SCREEN ===== */
   #welcome-screen h1 {
+    color: var(--primary-color);
     font-size: 2.5rem;
-    color: #4caf50;
-    animation: fadeIn 1s ease-in;
+    margin-bottom: 1rem;
+    animation: fadeIn 1s ease-in-out;
   }
   
   @keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
   }
   
+  /* ===== APP SCREEN ===== */
   #app-screen h2 {
-    color: #4caf50;
-    margin-bottom: 1rem;
+    color: var(--primary-dark);
+    margin-bottom: 1.5rem;
     text-align: center;
+    font-size: 1.8rem;
   }
   
   .table-container {
     width: 100%;
     overflow-x: auto;
     margin-bottom: 2rem;
-    background: #1f1f1f;
-    border-radius: 8px;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+    background-color: var(--white);
+    border-radius: 12px;
+    box-shadow: var(--shadow);
+    padding: 1rem;
   }
   
   #meal-table {
     width: 100%;
     border-collapse: collapse;
+    table-layout: fixed;
   }
   
   #meal-table th, 
   #meal-table td {
     padding: 1rem;
     text-align: center;
-    border: 1px solid #444;
+    border: 1px solid #e0e0e0;
     min-width: 150px;
   }
   
   #meal-table th {
-    background: #292929;
-    font-weight: bold;
+    background-color: var(--primary-color);
+    color: var(--white);
+    font-weight: 600;
     position: sticky;
     top: 0;
   }
@@ -118,267 +151,306 @@
     position: sticky;
     left: 0;
     z-index: 2;
+    background-color: var(--primary-dark);
+  }
+  
+  .meal-header th {
+    background-color: var(--primary-light);
+    color: var(--dark-color);
+    text-align: left;
+    font-weight: 600;
   }
   
   .meal-cell {
-    display: flex;
-    flex-direction: column;
-    gap: 0.75rem;
-    padding: 0.75rem;
-    height: 100%;
+    padding: 1rem;
+    transition: all 0.3s ease;
   }
   
   .meal-input {
     width: 100%;
-    padding: 0.5rem;
-    background: #222;
-    border: 1px solid #444;
-    border-radius: 4px;
-    color: white;
-    transition: border-color 0.3s;
+    padding: 0.75rem;
+    border: 1px solid #e0e0e0;
+    border-radius: 6px;
+    font-size: 1rem;
+    transition: all 0.3s ease;
   }
   
   .meal-input:focus {
     outline: none;
-    border-color: #4caf50;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.2);
   }
   
   .health-slider {
     width: 100%;
     margin: 0.5rem 0;
+    height: 8px;
     -webkit-appearance: none;
     appearance: none;
-    height: 6px;
-    border-radius: 3px;
-    background: linear-gradient(to right, #f44336, #ffeb3b, #4caf50);
+    border-radius: 4px;
+    background: linear-gradient(to right, var(--danger-color), var(--secondary-color), var(--primary-color));
     outline: none;
   }
   
   .health-slider::-webkit-slider-thumb {
     -webkit-appearance: none;
-    width: 18px;
-    height: 18px;
-    background: #fff;
+    width: 20px;
+    height: 20px;
+    background: var(--white);
+    border: 2px solid var(--primary-color);
     border-radius: 50%;
-    border: 2px solid #4caf50;
     cursor: pointer;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
   }
   
-  .slider-value {
-    font-size: 0.9rem;
-    font-weight: bold;
+  .health-percent {
+    font-weight: 700;
+    font-size: 1rem;
   }
   
-  .health-0 { background-color: rgba(244, 67, 54, 0.1); }
-  .health-1 { background-color: rgba(244, 67, 54, 0.2); }
-  .health-2 { background-color: rgba(244, 67, 54, 0.3); }
-  .health-3 { background-color: rgba(255, 193, 7, 0.2); }
-  .health-4 { background-color: rgba(255, 193, 7, 0.3); }
-  .health-5 { background-color: rgba(255, 193, 7, 0.4); }
-  .health-6 { background-color: rgba(76, 175, 80, 0.2); }
-  .health-7 { background-color: rgba(76, 175, 80, 0.3); }
-  .health-8 { background-color: rgba(76, 175, 80, 0.4); }
-  .health-9 { background-color: rgba(76, 175, 80, 0.5); }
-  .health-10 { background-color: rgba(76, 175, 80, 0.6); }
+  /* Health level colors */
+  .health-0 { background-color: rgba(244, 67, 54, 0.9); color: white; }
+  .health-1 { background-color: rgba(244, 67, 54, 0.8); color: white; }
+  .health-2 { background-color: rgba(244, 67, 54, 0.7); color: white; }
+  .health-3 { background-color: rgba(255, 152, 0, 0.7); color: var(--dark-color); }
+  .health-4 { background-color: rgba(255, 152, 0, 0.6); color: var(--dark-color); }
+  .health-5 { background-color: rgba(255, 152, 0, 0.5); color: var(--dark-color); }
+  .health-6 { background-color: rgba(76, 175, 80, 0.5); color: var(--dark-color); }
+  .health-7 { background-color: rgba(76, 175, 80, 0.6); color: var(--dark-color); }
+  .health-8 { background-color: rgba(76, 175, 80, 0.7); color: var(--dark-color); }
+  .health-9 { background-color: rgba(76, 175, 80, 0.8); color: white; }
+  .health-10 { background-color: rgba(76, 175, 80, 0.9); color: white; }
   
   #save-meals {
-    padding: 0.75rem 1.5rem;
-    background: #4caf50;
+    display: block;
+    width: 100%;
+    max-width: 300px;
+    margin: 1.5rem auto;
+    padding: 1rem;
+    background-color: var(--primary-color);
+    color: var(--white);
     border: none;
     border-radius: 8px;
-    color: white;
+    font-size: 1.1rem;
+    font-weight: 600;
     cursor: pointer;
-    margin: 1rem 0;
-    font-size: 1rem;
-    transition: background-color 0.3s;
+    transition: all 0.3s ease;
   }
   
   #save-meals:hover {
-    background: #3e8e41;
+    background-color: var(--primary-dark);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   }
   
   #save-message {
-    margin: 0.5rem 0;
-    color: #4caf50;
-    height: 1.5rem;
-    font-weight: bold;
     text-align: center;
+    color: var(--primary-dark);
+    font-weight: 600;
+    height: 1.5rem;
+    margin-bottom: 1rem;
   }
   
+  /* ===== CHATBOT STYLES ===== */
   .chatbot-toggler {
     position: fixed;
-    bottom: 20px;
-    right: 20px;
+    bottom: 2rem;
+    right: 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
     padding: 1rem 1.5rem;
-    background: #4caf50;
+    background-color: var(--primary-color);
+    color: var(--white);
     border: none;
-    border-radius: 30px;
-    color: white;
+    border-radius: 50px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
     cursor: pointer;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.2);
     z-index: 1000;
-    transition: all 0.3s;
+    transition: all 0.3s ease;
   }
   
   .chatbot-toggler:hover {
-    background: #3e8e41;
-    transform: scale(1.05);
+    background-color: var(--primary-dark);
+    transform: translateY(-3px);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+  }
+  
+  .chatbot-toggler span.material-symbols-outlined {
+    font-size: 1.5rem;
   }
   
   .chatbot {
     position: fixed;
-    bottom: 80px;
-    right: 20px;
-    width: 350px;
-    max-height: 60vh;
-    background: #1f1f1f;
+    bottom: calc(2rem + 60px);
+    right: 2rem;
+    width: 100%;
+    max-width: 400px;
+    max-height: 70vh;
+    background-color: var(--white);
     border-radius: 12px;
-    box-shadow: 0 2px 15px rgba(0,0,0,0.3);
-    display: none;
-    flex-direction: column;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
     overflow: hidden;
+    transform: translateY(20px);
+    opacity: 0;
+    pointer-events: none;
     z-index: 1000;
-    transition: all 0.3s;
+    transition: all 0.3s ease;
   }
   
   body.show-chatbot .chatbot {
-    display: flex;
-    animation: slideUp 0.3s ease-out;
-  }
-  
-  @keyframes slideUp {
-    from { transform: translateY(20px); opacity: 0; }
-    to { transform: translateY(0); opacity: 1; }
+    transform: translateY(0);
+    opacity: 1;
+    pointer-events: auto;
   }
   
   .chatbot header {
-    padding: 1rem;
-    background: #292929;
     display: flex;
-    justify-content: space-between;
     align-items: center;
+    justify-content: space-between;
+    padding: 1.5rem;
+    background-color: var(--primary-color);
+    color: var(--white);
   }
   
   .chatbot header h2 {
-    color: white;
-    font-size: 1.2rem;
-    margin: 0;
+    font-size: 1.3rem;
+    font-weight: 600;
   }
   
-  .chatbot .close-btn {
+  .chatbot header .close-btn {
     background: none;
     border: none;
-    color: white;
-    font-size: 1.5rem;
+    color: var(--white);
     cursor: pointer;
-    transition: color 0.3s;
-  }
-  
-  .chatbot .close-btn:hover {
-    color: #f44336;
+    font-size: 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
   
   .chatbox {
-    flex: 1;
+    height: calc(70vh - 130px);
     overflow-y: auto;
-    padding: 1rem;
+    padding: 1.5rem;
     display: flex;
     flex-direction: column;
-    gap: 0.75rem;
+    gap: 1rem;
   }
   
   .chat {
-    max-width: 80%;
-    padding: 0.75rem 1rem;
+    max-width: 85%;
+    padding: 1rem;
     border-radius: 12px;
+    font-size: 0.95rem;
+    line-height: 1.5;
     animation: fadeIn 0.3s ease-out;
   }
   
   .chat.incoming {
-    background: #292929;
+    background-color: #f0f0f0;
+    color: var(--dark-color);
     align-self: flex-start;
     display: flex;
-    gap: 0.5rem;
-    align-items: center;
+    align-items: flex-start;
+    gap: 0.75rem;
   }
   
-  .chat.incoming p {
-    margin: 0;
+  .chat.incoming .material-symbols-outlined {
+    color: var(--primary-color);
+    font-size: 1.5rem;
   }
   
   .chat.outgoing {
-    background: #4caf50;
-    color: white;
+    background-color: var(--primary-color);
+    color: var(--white);
     align-self: flex-end;
   }
   
   .chat-input {
-    padding: 0.75rem;
-    background: #292929;
     display: flex;
     gap: 0.5rem;
-    align-items: center;
+    padding: 1rem;
+    border-top: 1px solid #e0e0e0;
+    background-color: var(--white);
   }
   
   .chat-input textarea {
     flex: 1;
-    padding: 0.75rem;
-    border: none;
-    border-radius: 20px;
-    background: #1a1a1a;
-    color: white;
+    padding: 0.75rem 1rem;
+    border: 1px solid #e0e0e0;
+    border-radius: 25px;
+    font-size: 0.95rem;
+    max-height: 120px;
     resize: none;
-    max-height: 100px;
-    min-height: 40px;
     outline: none;
-    font-family: inherit;
+    transition: all 0.3s ease;
   }
   
-  .chat-input span {
+  .chat-input textarea:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.2);
+  }
+  
+  .chat-input button {
+    width: 45px;
+    height: 45px;
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 40px;
-    height: 40px;
-    background: #4caf50;
-    color: white;
+    background-color: var(--primary-color);
+    color: var(--white);
+    border: none;
     border-radius: 50%;
     cursor: pointer;
-    transition: background-color 0.3s;
+    transition: all 0.3s ease;
   }
   
-  .chat-input span:hover {
-    background: #3e8e41;
+  .chat-input button:hover {
+    background-color: var(--primary-dark);
+    transform: rotate(15deg);
   }
   
+  /* ===== RESPONSIVE DESIGN ===== */
   @media (max-width: 768px) {
     #meal-table th, 
     #meal-table td {
+      padding: 0.75rem;
       min-width: 120px;
-      padding: 0.75rem 0.5rem;
     }
-    
+  
     .chatbot {
-      width: 90%;
-      right: 5%;
-      bottom: 70px;
+      max-width: calc(100% - 2rem);
+      right: 1rem;
+      bottom: calc(1rem + 60px);
     }
   }
   
   @media (max-width: 480px) {
+    .screen {
+      padding: 1rem;
+    }
+  
+    #login-screen {
+      padding: 2rem 1rem;
+    }
+  
     #meal-table th, 
     #meal-table td {
-      min-width: 100px;
       padding: 0.5rem;
       font-size: 0.9rem;
+      min-width: 100px;
     }
-    
-    .meal-cell {
-      gap: 0.5rem;
-      padding: 0.5rem;
+  
+    .chatbot-toggler {
+      bottom: 1rem;
+      right: 1rem;
+      padding: 0.75rem 1.25rem;
     }
-    
-    .health-slider {
-      margin: 0.25rem 0;
+  
+    .chatbot {
+      bottom: calc(1rem + 60px);
+      right: 1rem;
     }
   }

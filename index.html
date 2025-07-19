@@ -1,21 +1,24 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="black" />
-  <meta name="apple-mobile-web-app-title" content="MealMapper" />
-  <meta name="apple-mobile-web-app-touch-icon" content="logo.png" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#4caf50">
+  <meta name="description" content="MealMapper - Your personal meal planning assistant">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="MealMapper">
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" content="logo.png">
   <title>MealMapper - ChefBot</title>
-  <link rel="stylesheet" href="styles.css" />
-  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet">
 </head>
 <body>
   <!-- LOGIN SCREEN -->
   <section id="login-screen" class="screen center-screen">
     <h1>Welcome to MealMapper</h1>
-    <input id="username" type="text" placeholder="Enter your name" autocomplete="off" />
+    <input id="username" type="text" placeholder="Enter your name" autocomplete="off">
     <button id="login-btn">Start Cooking</button>
   </section>
 
@@ -91,20 +94,36 @@
     <button id="save-meals">Save Meal Plan</button>
     <div id="save-message"></div>
 
-    <button class="chatbot-toggler">Chat with ChefBot</button>
+    <button class="chatbot-toggler">
+      <span class="material-symbols-outlined">chat</span>
+      <span>ChefBot</span>
+    </button>
 
     <div class="chatbot" id="ai-chat">
       <header>
-        ChefBot
-        <button class="close-btn">&times;</button>
+        <h2>ChefBot</h2>
+        <button class="close-btn">
+          <span class="material-symbols-outlined">close</span>
+        </button>
       </header>
       <ul class="chatbox" id="chat-messages"></ul>
       <div class="chat-input">
-        <textarea id="chat-input" rows="1" placeholder="Ask ChefBot anything..."></textarea>
-        <span role="button" tabindex="0">&#9658;</span>
+        <textarea id="chat-input" rows="1" placeholder="Ask ChefBot about recipes, nutrition, or meal ideas..." required></textarea>
+        <button id="send-btn" class="material-symbols-outlined">send</button>
       </div>
     </div>
   </section>
+
+  <!-- Service Worker Registration -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('sw.js')
+          .then(registration => console.log('ServiceWorker registered'))
+          .catch(err => console.log('ServiceWorker registration failed: ', err));
+      });
+    }
+  </script>
 
   <script src="app.js"></script>
 </body>
