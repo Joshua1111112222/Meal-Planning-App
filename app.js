@@ -11,7 +11,13 @@ const greetings = [
   
   const days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
   
-  function login() {
+  let generator; // AI pipeline
+  
+  async function loadModel() {
+    generator = await window.transformers.pipeline("text-generation", "Xenova/gpt2");
+  }
+  
+  async function login() {
     const name = document.getElementById("username").value.trim();
     if (name) {
       localStorage.setItem("username", name);
@@ -60,26 +66,53 @@ const greetings = [
     return data;
   }
   
-  const BACKEND_URL = "https://meal-planning-app-backend.onrender.com";
-
-async function analyze() {
-  const response = await fetch(`${BACKEND_URL}/analyze`, {
-    method: "POST",
-    headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify(getMeals())
-  });
-  const result = await response.json();
-  document.getElementById("output").textContent = result.analysis;
-}
-
-async function editMeals() {
-  const response = await fetch(`${BACKEND_URL}/edit`, {
-    method: "POST",
-    headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify(getMeals())
-  });
-  const result = await response.json();
-  document.getElementById("output").textContent = result.edited;
-}
-
+  function formatMealsText(meals) {
+    let text = "Here's my weekly meal plan:\n";
+    for (const day of days) {
+      text += `${day}:\n`;
+      text += `Breakfast: ${meals[day].breakfast || "None"}\n`;
+      text += `Lunch: ${meals[day].lunch || "None"}\n`;
+      text += `Dinner: ${meals[day].dinner || "None"}\n\n`;
+    }
+    return text;
+  }
+  
+  async function analyze() {
+    if (!generator) {
+      document.getElementById("output").textContent = "Loading AI model, please wait...";
+      await loadModel();
+    }
+  
+    toggleButtons(false);
+    const meals = getMeals();
+    const prompt = formatMealsText(meals) + "\nRate the healthiness of this meal plan in a friendly way:";
+    const output = await generator(prompt, { max_length: 100 });
+    document.getElementById("output").textContent = output[0].generated_text;
+    toggleButtons(true);
+  }
+  
+  async function editMeals() {
+    if (!generator) {
+      document.getElementById("output").textContent = "Loading AI model, please wait...";
+      await loadModel();
+    }
+  
+    toggleButtons(false);
+    const meals = getMeals();
+    const prompt = formatMealsText(meals) + "\nSuggest improvements to make this meal plan healthier and more balanced:";
+    const output = await generator(prompt, { max_length: 150 });
+    document.getElementById("output").textContent = output[0].generated_text;
+    toggleButtons(true);
+  }
+  
+  function toggleButtons(enabled) {
+    document.querySelector('button[onclick="analyze()"]').disabled = !enabled;
+    document.querySelector('button[onclick="editMeals()"]').disabled = !enabled;
+  }
+  
+  window.onload = async () => {
+    await loadModel();
+    const name = localStorage.getItem("username");
+    if (name) showWelcome();
+  };
   
