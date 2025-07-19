@@ -12,40 +12,51 @@
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
 </head>
 <body>
+  <!-- LOGIN SCREEN -->
   <section id="login-screen" class="screen center-screen">
     <h1>Welcome to MealMapper</h1>
     <input id="username" type="text" placeholder="Enter your name" autocomplete="off" />
     <button id="login-btn">Start Cooking</button>
   </section>
 
+  <!-- WELCOME SCREEN -->
   <section id="welcome-screen" class="screen center-screen">
     <h1 id="greeting"></h1>
   </section>
 
+  <!-- APP SCREEN -->
   <section id="app-screen" class="screen">
-    <div class="view-controls">
-      <button id="tableViewBtn" class="active">Table View</button>
-      <button id="cardViewBtn">Card View</button>
-    </div>
-    
     <h2>Meal Planner</h2>
     
-    <div id="table-view" class="view-container">
+    <div class="table-container">
       <table id="meal-table">
         <thead>
           <tr>
-            <th>Day</th>
-            <th>Breakfast</th>
-            <th>Lunch</th>
-            <th>Dinner</th>
+            <th>Meal \ Day</th>
+            <th>Monday</th>
+            <th>Tuesday</th>
+            <th>Wednesday</th>
+            <th>Thursday</th>
+            <th>Friday</th>
+            <th>Saturday</th>
+            <th>Sunday</th>
           </tr>
         </thead>
-        <tbody></tbody>
+        <tbody>
+          <tr id="breakfast-row">
+            <th>Breakfast</th>
+            <!-- Breakfast cells will be inserted here by JavaScript -->
+          </tr>
+          <tr id="lunch-row">
+            <th>Lunch</th>
+            <!-- Lunch cells will be inserted here by JavaScript -->
+          </tr>
+          <tr id="dinner-row">
+            <th>Dinner</th>
+            <!-- Dinner cells will be inserted here by JavaScript -->
+          </tr>
+        </tbody>
       </table>
-    </div>
-    
-    <div id="card-view" class="view-container" style="display:none;">
-      <div class="days-container"></div>
     </div>
     
     <button id="save-meals">Save Meal Plan</button>

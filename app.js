@@ -12,50 +12,68 @@ const greetings = [
   const days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
   const meals = ["Breakfast", "Lunch", "Dinner"];
   
-  let currentView = 'table';
   let messageHistory = [];
   let aiChatVisible = false;
   
+  // DOM Elements
+  const loginScreen = document.getElementById("login-screen");
+  const welcomeScreen = document.getElementById("welcome-screen");
+  const appScreen = document.getElementById("app-screen");
+  const usernameInput = document.getElementById("username");
+  const loginBtn = document.getElementById("login-btn");
+  const greetingElement = document.getElementById("greeting");
+  const saveBtn = document.getElementById("save-meals");
+  const saveMessage = document.getElementById("save-message");
+  const mealTable = document.getElementById("meal-table");
+  const chatToggler = document.querySelector(".chatbot-toggler");
+  const chatbot = document.querySelector(".chatbot");
+  const closeBtn = document.querySelector(".close-btn");
+  const chatInput = document.getElementById("chat-input");
+  const sendBtn = document.querySelector(".chat-input span");
+  const chatMessages = document.getElementById("chat-messages");
+  
+  // Initialize the app
   window.onload = () => {
     const username = localStorage.getItem("username");
     if (username) {
-      showWelcome();
+      showWelcome(username);
     } else {
       showScreen("login-screen");
     }
   
-    document.getElementById("login-btn").onclick = login;
-    document.getElementById("save-meals").onclick = saveMealsToStorage;
-    document.getElementById("tableViewBtn").onclick = () => switchView('table');
-    document.getElementById("cardViewBtn").onclick = () => switchView('card');
+    // Event listeners
+    loginBtn.addEventListener("click", login);
+    saveBtn.addEventListener("click", saveMealsToStorage);
+    chatToggler.addEventListener("click", toggleChat);
+    closeBtn.addEventListener("click", closeChat);
+    chatInput.addEventListener("keydown", handleChatInput);
+    sendBtn.addEventListener("click", handleChat);
   
-    document.querySelector(".chatbot-toggler").onclick = toggleChat;
-    document.querySelector(".close-btn").onclick = closeChat;
-    document.getElementById("chat-input").addEventListener("keydown", e => {
-      if (e.key === "Enter" && !e.shiftKey) {
-        e.preventDefault();
-        handleChat();
-      }
-    });
-    document.querySelector(".chat-input span[role='button']").onclick = handleChat;
-  
-    buildTableView();
-    buildCardView();
+    // Build the meal table
+    buildMealTable();
     loadMealsFromStorage();
   };
   
-  function login() {
-    const name = document.getElementById("username").value.trim();
-    if (!name) return alert("Please enter your name.");
-    localStorage.setItem("username", name);
-    showWelcome();
+  function showScreen(screenId) {
+    [loginScreen, welcomeScreen, appScreen].forEach(screen => {
+      screen.style.display = screen === document.getElementById(screenId) ? "flex" : "none";
+    });
   }
   
-  function showWelcome() {
+  function login() {
+    const username = usernameInput.value.trim();
+    if (!username) {
+      alert("Please enter your name.");
+      return;
+    }
+    localStorage.setItem("username", username);
+    showWelcome(username);
+  }
+  
+  function showWelcome(username) {
+    const randomGreeting = greetings[Math.floor(Math.random() * greetings.length)];
+    greetingElement.textContent = randomGreeting.replace("NAME", username);
     showScreen("welcome-screen");
-    const name = localStorage.getItem("username");
-    const greeting = greetings[Math.floor(Math.random() * greetings.length)].replace("NAME", name);
-    document.getElementById("greeting").textContent = greeting;
     
     setTimeout(() => {
       showScreen("app-screen");
@@ -63,164 +81,99 @@ const greetings = [
     }, 2000);
   }
   
-  function showScreen(screenId) {
-    document.querySelectorAll(".screen").forEach(screen => {
-      screen.style.display = "none";
-    });
-    document.getElementById(screenId).style.display = "flex";
-  }
-  
-  function switchView(view) {
-    currentView = view;
-    document.getElementById("table-view").style.display = view === 'table' ? 'block' : 'none';
-    document.getElementById("card-view").style.display = view === 'card' ? 'block' : 'none';
-    document.getElementById("tableViewBtn").classList.toggle('active', view === 'table');
-    document.getElementById("cardViewBtn").classList.toggle('active', view === 'card');
-    updateHealthColors();
-  }
-  
-  function buildTableView() {
-    const tbody = document.querySelector("#meal-table tbody");
-    tbody.innerHTML = "";
-    
-    days.forEach(day => {
-      const tr = document.createElement("tr");
+  function buildMealTable() {
+    // Create cells for each meal row
+    meals.forEach(meal => {
+      const row = document.getElementById(`${meal.toLowerCase()}-row`);
       
-      const dayCell = document.createElement("td");
-      dayCell.textContent = day;
-      tr.appendChild(dayCell);
-      
-      meals.forEach(meal => {
+      days.forEach(day => {
         const cell = document.createElement("td");
         cell.className = "meal-cell";
         cell.innerHTML = `
-          <input class="meal-input" type="text" id="${day}-${meal}" placeholder="${meal}" />
+          <input class="meal-input" type="text" id="${day}-${meal}" placeholder="Enter ${meal}" />
           <input class="health-slider" type="range" min="0" max="100" value="50" id="${day}-${meal}-score" />
           <div class="slider-value" id="${day}-${meal}-value">50%</div>
         `;
-        tr.appendChild(cell);
+        row.appendChild(cell);
         
+        // Setup slider event
         const slider = cell.querySelector(".health-slider");
         const valueDisplay = cell.querySelector(".slider-value");
-        slider.oninput = () => {
+        slider.addEventListener("input", () => {
           const value = slider.value;
           valueDisplay.textContent = `${value}%`;
           updateHealthColors();
-          syncInputs(day, meal, value);
-        };
-      });
-      
-      tbody.appendChild(tr);
-    });
-  }
-  
-  function buildCardView() {
-    const container = document.querySelector(".days-container");
-    container.innerHTML = "";
-    
-    days.forEach(day => {
-      const dayCard = document.createElement("div");
-      dayCard.className = "day-card";
-      dayCard.innerHTML = `
-        <div class="day-header">${day}</div>
-        <div class="meals-container" id="${day}-meals"></div>
-      `;
-      container.appendChild(dayCard);
-      
-      const mealsContainer = dayCard.querySelector(".meals-container");
-      
-      meals.forEach(meal => {
-        const mealCard = document.createElement("div");
-        mealCard.className = "meal-card";
-        mealCard.id = `${day}-${meal}-card`;
-        mealCard.innerHTML = `
-          <div><strong>${meal}:</strong></div>
-          <input class="meal-input" type="text" id="${day}-${meal}-card-input" />
-          <input class="health-slider" type="range" min="0" max="100" value="50" id="${day}-${meal}-card-score" />
-          <div class="slider-value" id="${day}-${meal}-card-value">50%</div>
-        `;
-        mealsContainer.appendChild(mealCard);
-        
-        const slider = mealCard.querySelector(".health-slider");
-        const valueDisplay = mealCard.querySelector(".slider-value");
-        slider.oninput = () => {
-          const value = slider.value;
-          valueDisplay.textContent = `${value}%`;
-          updateHealthColors();
-          syncInputs(day, meal, value);
-        };
+        });
       });
     });
-  }
-  
-  function syncInputs(day, meal, value) {
-    if (currentView === 'table') {
-      document.getElementById(`${day}-${meal}-card-score`).value = value;
-      document.getElementById(`${day}-${meal}-card-value`).textContent = `${value}%`;
-      document.getElementById(`${day}-${meal}-card-input`).value = document.getElementById(`${day}-${meal}`).value;
-    } else {
-      document.getElementById(`${day}-${meal}-score`).value = value;
-      document.getElementById(`${day}-${meal}-value`).textContent = `${value}%`;
-      document.getElementById(`${day}-${meal}`).value = document.getElementById(`${day}-${meal}-card-input`).value;
-    }
   }
   
   function updateHealthColors() {
     days.forEach(day => {
       meals.forEach(meal => {
-        const score = parseInt(document.getElementById(`${day}-${meal}-score`).value);
-        const healthLevel = Math.min(Math.floor(score / 10), 10);
+        const slider = document.getElementById(`${day}-${meal}-score`);
+        if (!slider) return;
         
-        // Update table view
-        const tableCell = document.querySelector(`#${day}-${meal}`).parentElement;
-        tableCell.className = `meal-cell health-${healthLevel}`;
+        const value = parseInt(slider.value);
+        const healthLevel = Math.min(Math.floor(value / 10), 10);
+        const cell = slider.closest("td");
         
-        // Update card view
-        const mealCard = document.getElementById(`${day}-${meal}-card`);
-        if (mealCard) {
-          mealCard.className = `meal-card health-${healthLevel}`;
-        }
+        // Remove all health classes
+        cell.classList.remove(...Array.from({ length: 11 }, (_, i) => `health-${i}`));
+        // Add the appropriate health class
+        cell.classList.add(`health-${healthLevel}`);
       });
     });
   }
   
   function saveMealsToStorage() {
     const mealData = {};
+    
     days.forEach(day => {
       mealData[day] = {};
       meals.forEach(meal => {
-        const mealText = document.getElementById(`${day}-${meal}`).value;
-        const score = document.getElementById(`${day}-${meal}-score`).value;
-        mealData[day][meal] = { meal: mealText, healthScore: score };
+        const mealInput = document.getElementById(`${day}-${meal}`);
+        const healthInput = document.getElementById(`${day}-${meal}-score`);
+        
+        mealData[day][meal] = {
+          meal: mealInput.value,
+          healthScore: parseInt(healthInput.value)
+        };
       });
     });
+    
     localStorage.setItem("mealData", JSON.stringify(mealData));
     
-    const saveMsg = document.getElementById("save-message");
-    saveMsg.textContent = "Meal plan saved!";
-    setTimeout(() => saveMsg.textContent = "", 2000);
+    // Show save confirmation
+    saveMessage.textContent = "Meal plan saved successfully!";
+    setTimeout(() => {
+      saveMessage.textContent = "";
+    }, 2000);
   }
   
   function loadMealsFromStorage() {
-    const saved = localStorage.getItem("mealData");
-    if (!saved) return;
+    const savedData = localStorage.getItem("mealData");
+    if (!savedData) return;
     
-    const mealData = JSON.parse(saved);
+    const mealData = JSON.parse(savedData);
+    
     days.forEach(day => {
       meals.forEach(meal => {
-        if (mealData[day] && mealData[day][meal]) {
-          document.getElementById(`${day}-${meal}`).value = mealData[day][meal].meal;
-          document.getElementById(`${day}-${meal}-score`).value = mealData[day][meal].healthScore;
-          document.getElementById(`${day}-${meal}-value`).textContent = `${mealData[day][meal].healthScore}%`;
-          
-          if (document.getElementById(`${day}-${meal}-card-input`)) {
-            document.getElementById(`${day}-${meal}-card-input`).value = mealData[day][meal].meal;
-            document.getElementById(`${day}-${meal}-card-score`).value = mealData[day][meal].healthScore;
-            document.getElementById(`${day}-${meal}-card-value`).textContent = `${mealData[day][meal].healthScore}%`;
-          }
+        const dayMeal = mealData[day]?.[meal];
+        if (!dayMeal) return;
+        
+        const mealInput = document.getElementById(`${day}-${meal}`);
+        const healthInput = document.getElementById(`${day}-${meal}-score`);
+        const valueDisplay = document.getElementById(`${day}-${meal}-value`);
+        
+        if (mealInput && healthInput && valueDisplay) {
+          mealInput.value = dayMeal.meal;
+          healthInput.value = dayMeal.healthScore;
+          valueDisplay.textContent = `${dayMeal.healthScore}%`;
         }
       });
     });
+    
     updateHealthColors();
   }
   
@@ -228,7 +181,7 @@ const greetings = [
     aiChatVisible = !aiChatVisible;
     document.body.classList.toggle("show-chatbot", aiChatVisible);
     if (aiChatVisible) {
-      document.getElementById("chat-input").focus();
+      chatInput.focus();
     }
   }
   
@@ -237,73 +190,82 @@ const greetings = [
     document.body.classList.remove("show-chatbot");
   }
   
-  function createChatLi(message, className) {
-    const li = document.createElement("li");
-    li.className = `chat ${className}`;
-    if (className === "incoming") {
-      li.innerHTML = `<span class="material-symbols-outlined">smart_toy</span><p></p>`;
-      li.querySelector("p").textContent = message;
-    } else {
-      li.textContent = message;
-    }
-    return li;
-  }
-  
-  async function generateResponse(chatElement) {
-    const messageElement = chatElement.querySelector("p");
-    const userMessage = messageHistory[messageHistory.length - 1].parts[0].text;
-  
-    try {
-      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=AIzaSyBmvvOHdCEkqg8UYVh2tVoe2EFEV5rLYvE`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          contents: [{
-            parts: [{ text: `You are ChefBot, a helpful cooking assistant. Be concise. ${userMessage}` }]
-          }]
-        }),
-      });
-  
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error?.message || "API Error");
-  
-      const botReply = data.candidates?.[0]?.content?.parts?.[0]?.text || "I couldn't generate a response.";
-      messageElement.textContent = botReply;
-  
-      messageHistory.push({
-        role: "model",
-        parts: [{ text: botReply }]
-      });
-  
-    } catch (error) {
-      messageElement.classList.add("error");
-      messageElement.textContent = "Error: " + error.message;
-    } finally {
-      chatElement.scrollIntoView({ behavior: "smooth", block: "end" });
+  function handleChatInput(e) {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      handleChat();
     }
   }
   
   function handleChat() {
-    const input = document.getElementById("chat-input");
-    const text = input.value.trim();
-    if (!text) return;
+    const message = chatInput.value.trim();
+    if (!message) return;
+    
+    // Add user message to chat
+    addChatMessage(message, "outgoing");
+    chatInput.value = "";
+    
+    // Show "Thinking..." message
+    const thinkingMessage = addChatMessage("Thinking...", "incoming");
+    
+    // Generate AI response
+    generateAIResponse(message, thinkingMessage);
+  }
   
-    input.value = "";
-    input.style.height = "auto";
+  function addChatMessage(message, type) {
+    const li = document.createElement("li");
+    li.className = `chat ${type}`;
+    
+    if (type === "incoming") {
+      li.innerHTML = `
+        <span class="material-symbols-outlined">smart_toy</span>
+        <p>${message}</p>
+      `;
+    } else {
+      li.textContent = message;
+    }
+    
+    chatMessages.appendChild(li);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+    
+    return li.querySelector("p") || li;
+  }
   
-    const chatbox = document.getElementById("chat-messages");
-    const userLi = createChatLi(text, "outgoing");
-    chatbox.appendChild(userLi);
-    chatbox.scrollTop = chatbox.scrollHeight;
-  
-    messageHistory.push({
-      role: "user",
-      parts: [{ text }]
-    });
-  
-    const thinkingLi = createChatLi("Thinking...", "incoming");
-    chatbox.appendChild(thinkingLi);
-    chatbox.scrollTop = chatbox.scrollHeight;
-  
-    generateResponse(thinkingLi);
+  async function generateAIResponse(userMessage, messageElement) {
+    try {
+      // Add user message to history
+      messageHistory.push({
+        role: "user",
+        parts: [{ text: userMessage }]
+      });
+      
+      // Call Gemini API
+      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=AIzaSyBmvvOHdCEkqg8UYVh2tVoe2EFEV5rLYvE`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          contents: [{
+            parts: [{ text: `You are ChefBot, a helpful cooking assistant. Help the user with anything they ask and if you don't know take your best guess or say, "I apologize I am still currently testing please be patient with me and I will try again next time". ${userMessage}` }]
+          }]
+        })
+      });
+      
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error?.message || "Failed to get response");
+      
+      const botReply = data.candidates?.[0]?.content?.parts?.[0]?.text || "I couldn't generate a response.";
+      
+      // Update the message element
+      messageElement.textContent = botReply;
+      
+      // Add bot reply to history
+      messageHistory.push({
+        role: "model",
+        parts: [{ text: botReply }]
+      });
+      
+    } catch (error) {
+      messageElement.classList.add("error");
+      messageElement.textContent = `Error: ${error.message}`;
+    }
   }
