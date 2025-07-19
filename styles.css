@@ -16,10 +16,9 @@ body {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  padding-left: 1em;
-  padding-right: 1em;
 }
 
+/* Screen base */
 .screen {
   display: none;
   flex-direction: column;
@@ -27,9 +26,6 @@ body {
   align-items: center;
   padding: 1em;
   flex-grow: 1;
-  max-width: 600px;
-  margin: 0 auto;
-  width: 100%;
   text-align: center;
 }
 
@@ -37,61 +33,44 @@ body {
   display: flex;
 }
 
-#login-screen h1 {
-  font-size: 3rem;
-  margin-bottom: 1rem;
+#login-screen h1,
+#welcome-screen h1 {
+  font-size: 2.5rem;
+  margin-bottom: 1.5rem;
   user-select: none;
+  max-width: 90vw;
+  word-wrap: break-word;
 }
 
-#login-screen input {
-  padding: 1em;
-  font-size: 1.5rem;
-  margin-bottom: 1rem;
-  border-radius: 10px;
+#login-screen input,
+#login-screen button {
+  padding: 0.75em 1.5em;
+  font-size: 1.3rem;
+  margin: 0.5em 0;
+  border-radius: 12px;
   border: none;
-  max-width: 320px;
-  width: 100%;
   background-color: #2a2a2a;
   color: #e0e0e0;
-  box-shadow: 0 0 5px #444;
-  outline: none;
-}
-
-#login-btn {
-  padding: 1em 1.5em;
-  font-size: 1.5rem;
-  border-radius: 10px;
-  border: none;
-  background-color: #4caf50;
-  color: #121212;
+  box-shadow: 0 0 10px #444;
   cursor: pointer;
-  box-shadow: 0 0 10px #4caf50;
-  transition: background-color 0.3s ease;
-  max-width: 320px;
-  width: 100%;
-}
-
-#login-btn:hover,
-#login-btn:focus {
-  background-color: #45a047;
   outline: none;
+  max-width: 320px;
+  width: 90vw;
+  transition: background-color 0.3s ease;
 }
 
-#welcome-screen h2 {
-  font-size: 2.5rem;
-  font-weight: 600;
-  user-select: none;
+#login-screen input:focus,
+#login-screen button:hover {
+  background-color: #444;
 }
 
+/* APP SCREEN */
 #app-screen {
   padding: 1em;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 1em;
-  max-width: 650px;
-  margin: 0 auto;
-  width: 100%;
 }
 
 h2 {
@@ -99,80 +78,104 @@ h2 {
   user-select: none;
 }
 
+/* Table styles */
 table {
   border-collapse: collapse;
   width: 100%;
+  max-width: 650px;
   background-color: #1f1f1f;
   border-radius: 12px;
   overflow: hidden;
-  table-layout: fixed;
-  word-wrap: break-word;
 }
 
 th,
 td {
-  padding: 0.8em 1em;
+  padding: 0.75em 1em;
   text-align: center;
   border: 1px solid #444;
-  font-size: 1.1rem;
+  font-size: 1rem;
   user-select: none;
+  max-width: 150px;
   word-wrap: break-word;
-  overflow-wrap: break-word;
 }
 
 .meal-input {
   width: 90%;
-  padding: 0.25em 0.5em;
+  padding: 0.3em 0.5em;
   font-size: 1rem;
   background-color: #222;
   border: 1px solid #444;
   border-radius: 6px;
   color: #eee;
-  word-wrap: break-word;
 }
 
+/* Health slider - reversed: left=red (unhealthy), right=green (healthy) */
 .health-slider {
-  appearance: none;
-  -webkit-appearance: none;
-  -moz-appearance: none;
-  width: 90%;
-  margin-top: 4px;
-  height: 8px;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    /* other styles */  
+  height: 10px;
   border-radius: 5px;
-  background: linear-gradient(to right, #f44336, #ffeb3b);
+  background: linear-gradient(
+    to right,
+    #f44336 0%,
+    #ffeb3b 50%,
+    #4caf50 100%
+  );
   outline: none;
   transition: background 0.3s ease;
+  cursor: pointer;
 }
 
 .health-slider::-webkit-slider-thumb {
   -webkit-appearance: none;
   appearance: none;
-  width: 16px;
-  height: 16px;
+  width: 18px;
+  height: 18px;
   background: #4caf50;
   cursor: pointer;
   border-radius: 50%;
   border: none;
-  margin-top: -4px;
-  box-shadow: 0 0 5px #4caf50;
+  margin-top: -5px;
+  box-shadow: 0 0 8px #4caf50;
 }
 
 .health-slider::-moz-range-thumb {
-  width: 16px;
-  height: 16px;
+  width: 18px;
+  height: 18px;
   background: #4caf50;
   cursor: pointer;
   border-radius: 50%;
   border: none;
-  box-shadow: 0 0 5px #4caf50;
+  box-shadow: 0 0 8px #4caf50;
 }
 
+/* Slider icons, healthy on right, unhealthy on left */
 .slider-icons {
   display: flex;
   justify-content: space-between;
   margin-top: 4px;
   font-size: 1.2rem;
   user-select: none;
+}
+
+.slider-icons span:first-child {
+  color: #f44336; /* Red for unhealthy */
+}
+.slider-icons span:last-child {
+  color: #4caf50; /* Green for healthy */
+}
+
+/* Save message */
+#save-message {
+  font-size: 0.9rem;
+  height: 1.2em;
+  color: #4caf50;
+  user-select: none;
+  margin-top: 0.2em;
+  min-height: 1.2em;
+  text-align: center;
 }
 
 /* Chatbot toggler button */
@@ -337,15 +340,4 @@ body.show-chatbot .chatbot {
 .chat-input span[role="button"]:focus {
   background-color: #4caf5080;
   outline: none;
-}
-
-/* Save message */
-#save-message {
-  font-size: 0.9rem;
-  height: 1.2em;
-  color: #4caf50;
-  user-select: none;
-  margin-top: 0.2em;
-  min-height: 1.2em;
-  text-align: center;
 }

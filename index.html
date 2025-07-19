@@ -1,50 +1,75 @@
 <!DOCTYPE html>
-<html lang="en" >
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black" />
   <meta name="apple-mobile-web-app-title" content="MealMapper" />
   <link rel="apple-touch-icon" href="logo.png" />
-  <title>MealMapper - ChefBot AI</title>
+  <title>MealMapper - ChefBot</title>
   <link rel="stylesheet" href="styles.css" />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined"
+    rel="stylesheet"
+  />
 </head>
 <body>
-  <div id="login-screen" class="screen center-screen">
-    <h1>MealMapper</h1>
-    <input type="text" id="username" placeholder="Enter your name" autocomplete="off" />
-    <button id="login-btn">Login</button>
-  </div>
 
-  <div id="welcome-screen" class="screen center-screen">
-    <h2 id="greeting"></h2>
-  </div>
+  <!-- LOGIN SCREEN -->
+  <section id="login-screen" class="screen center-screen">
+    <h1>Welcome to MealMapper</h1>
+    <input
+      id="username"
+      type="text"
+      placeholder="Enter your name"
+      autocomplete="off"
+      aria-label="Username"
+    />
+    <button id="login-btn" aria-label="Login">Start Cooking</button>
+  </section>
 
-  <div id="app-screen" class="screen">
-    <!-- Your meal planner table and save button go here -->
-    <h2>Plan Your Meals</h2>
-    <table id="meal-table" aria-label="Meal Planner Table">
+  <!-- WELCOME SCREEN -->
+  <section id="welcome-screen" class="screen center-screen">
+    <h1 id="greeting"></h1>
+  </section>
+
+  <!-- APP SCREEN -->
+  <section id="app-screen" class="screen">
+    <h2>Meal Planner</h2>
+    <table id="meal-table" aria-label="Meal planner table">
       <thead>
-        <tr><th>Day</th><th>Breakfast</th><th>Lunch</th><th>Dinner</th></tr>
+        <tr>
+          <th>Day</th>
+          <th>Breakfast</th>
+          <th>Lunch</th>
+          <th>Dinner</th>
+        </tr>
       </thead>
       <tbody></tbody>
     </table>
-    <button id="save-meals">Save Meal Plan</button>
-    <div id="save-message"></div>
-  </div>
+    <button id="save-meals" aria-label="Save meal plan">Save Meal Plan</button>
+    <div id="save-message" role="alert" aria-live="polite"></div>
 
-  <button class="chatbot-toggler" aria-label="Toggle ChefBot Chat">Chat with ChefBot</button>
+    <button class="chatbot-toggler" aria-label="Toggle ChefBot chat">
+      Chat with ChefBot
+    </button>
 
-  <section class="chatbot" aria-live="polite" aria-atomic="true" role="region">
-    <header>
-      <span>ChefBot AI</span>
-      <button class="close-btn" aria-label="Close chat">×</button>
-    </header>
-    <ul class="chatbox" id="chat-messages"></ul>
-    <div class="chat-input">
-      <textarea id="chat-input" placeholder="Ask ChefBot anything..." rows="1" aria-label="Chat input"></textarea>
-      <span role="button" tabindex="0" aria-label="Send message">&#10148;</span>
+    <div class="chatbot" id="ai-chat">
+      <header>
+        ChefBot
+        <button class="close-btn" aria-label="Close chat">&times;</button>
+      </header>
+      <ul class="chatbox" id="chat-messages" role="log" aria-live="polite"></ul>
+      <div class="chat-input">
+        <textarea
+          id="chat-input"
+          rows="1"
+          placeholder="Ask ChefBot anything..."
+          aria-label="Chat input"
+        ></textarea>
+        <span role="button" tabindex="0" aria-label="Send message">&#9658;</span>
+      </div>
     </div>
   </section>
 

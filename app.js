@@ -9,49 +9,70 @@ const greetings = [
     "Meal time magic starts now, NAME!"
   ];
   
-  const days = ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"];
-  const meals = ["Breakfast","Lunch","Dinner"];
+  const days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+  const meals = ["Breakfast", "Lunch", "Dinner"];
   
-  let generator, aiChatVisible = false;
+  let messageHistory = [];
+  let isFirstMessage = true;
+  let aiChatVisible = false;
+  
+  // Replace with your real API key here
+const API_KEY = "AIzaSyBmvvOHdCEkqg8UYVh2tVoe2EFEV5rLYvE"; //API key 
+  const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateMessage?key=${API_KEY}`;
   
   window.onload = () => {
-    if (localStorage.getItem("username")) showWelcome();
+    const username = localStorage.getItem("username");
+    if (username) {
+      showWelcome();
+    } else {
+      showScreen("login-screen");
+    }
+  
     document.getElementById("login-btn").onclick = login;
     document.getElementById("save-meals").onclick = saveMealsToStorage;
+  
     document.querySelector(".chatbot-toggler").onclick = toggleChat;
     document.querySelector(".close-btn").onclick = closeChat;
+  
     document.getElementById("chat-input").addEventListener("keydown", e => {
       if (e.key === "Enter" && !e.shiftKey) {
         e.preventDefault();
         handleChat();
       }
     });
+  
     document.querySelector(".chat-input span[role='button']").onclick = handleChat;
-    buildTable();
-    loadMealsFromStorage();
   };
   
   function login() {
-    const name = document.getElementById("username").value.trim();
+    const nameInput = document.getElementById("username");
+    const name = nameInput.value.trim();
     if (!name) return alert("Please enter your name.");
     localStorage.setItem("username", name);
     showWelcome();
   }
   
   function showWelcome() {
-    document.getElementById("login-screen").style.display = "none";
+    showScreen("welcome-screen");
     const name = localStorage.getItem("username");
-    const greet = greetings[Math.floor(Math.random()*greetings.length)].replace("NAME", name);
+    const greet = greetings[Math.floor(Math.random() * greetings.length)].replace(/NAME/g, name);
     const ws = document.getElementById("welcome-screen");
-    document.getElementById("greeting").textContent = greet;
-    ws.style.display = "flex";
+    const greetElem = document.getElementById("greeting");
+    greetElem.textContent = greet;
+    ws.style.opacity = "1";
+  
+    // After 3 seconds, switch to main app screen
     setTimeout(() => {
-      ws.style.opacity = 0;
-      setTimeout(() => {
-        ws.style.display = "none";
-        document.getElementById("app-screen").style.display = "flex";
-      }, 500);
-    }, 2500);
+      showScreen("app-screen");
+      buildTable();
+      loadMealsFromStorage();
+    }, 3000);
+  }
+  
+  function showScreen(screenId) {
+    ["login-screen", "welcome-screen", "app-screen"].forEach(id => {
+      document.getElementById(id).style.display = (id === screenId) ? "flex" : "none";
+    });
   }
   
   function buildTable() {
@@ -64,7 +85,7 @@ const greetings = [
           <input class="meal-input" type="text" id="${day}-${m}" placeholder="${m}" />
           <input class="health-slider" type="range" min="0" max="100" id="${day}-${m}-score" />
           <div class="slider-icons">
-            <span>🥗</span><span>🍜</span><span>🍩</span>
+            <span>Unhealthy</span><span>Healthy</span>
           </div>
         </td>
       `).join("");
@@ -79,53 +100,47 @@ const greetings = [
   
   function updateSlider(slider) {
     const val = slider.value;
-    if (val < 40) slider.style.background = "linear-gradient(to right, #f44336, #ffeb3b)";
-    else if (val < 70) slider.style.background = "linear-gradient(to right, #ffeb3b, #4caf50)";
-    else slider.style.background = "#4caf50";
-    saveMealsToStorage();
+    // color gradient handled by CSS background
+    // no JS needed unless you want dynamic color changes
   }
   
   function saveMealsToStorage() {
-    const data = {};
+    const mealData = {};
     days.forEach(day => {
-      data[day] = {};
+      mealData[day] = {};
       meals.forEach(m => {
-        const text = document.getElementById(`${day}-${m}`).value || "";
-        const score = document.getElementById(`${day}-${m}-score`).value || 50;
-        data[day][m] = { text, score: +score };
+        const mealText = document.getElementById(`${day}-${m}`).value.trim();
+        const score = Number(document.getElementById(`${day}-${m}-score`).value);
+        mealData[day][m] = { meal: mealText, healthScore: score };
       });
     });
-    localStorage.setItem("meals", JSON.stringify(data));
-    const sm = document.getElementById("save-message");
-    sm.textContent = "Meal plan saved!";
-    setTimeout(() => sm.textContent = "", 2000);
+    localStorage.setItem("mealData", JSON.stringify(mealData));
+    const saveMsg = document.getElementById("save-message");
+    saveMsg.textContent = "Meal plan saved successfully!";
+    setTimeout(() => (saveMsg.textContent = ""), 3000);
   }
   
   function loadMealsFromStorage() {
-    const saved = JSON.parse(localStorage.getItem("meals") || "{}");
-    days.forEach(day => meals.forEach(m => {
-      document.getElementById(`${day}-${m}`).value = saved[day]?.[m]?.text || "";
-      const s = saved[day]?.[m]?.score;
-      if (s != null) {
-        const slider = document.getElementById(`${day}-${m}-score`);
-        slider.value = s;
-        updateSlider(slider);
-      }
-    }));
+    const saved = localStorage.getItem("mealData");
+    if (!saved) return;
+    const mealData = JSON.parse(saved);
+    days.forEach(day => {
+      meals.forEach(m => {
+        if (mealData[day] && mealData[day][m]) {
+          document.getElementById(`${day}-${m}`).value = mealData[day][m].meal;
+          document.getElementById(`${day}-${m}-score`).value = mealData[day][m].healthScore;
+        }
+      });
+    });
   }
   
-  // === AI Chatbot with Google Gemini API ===
-  
-  const API_KEY = "AIzaSyBmvvOHdCEkqg8UYVh2tVoe2EFEV5rLYvE"; 
-  const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`;
-  
-  let isFirstMessage = true;
-  let messageHistory = [];
+  // -----------------------
+  // AI Chatbot functions
+  // -----------------------
   
   function toggleChat() {
     aiChatVisible = !aiChatVisible;
-    if (aiChatVisible) document.body.classList.add("show-chatbot");
-    else document.body.classList.remove("show-chatbot");
+    document.body.classList.toggle("show-chatbot", aiChatVisible);
   }
   
   function closeChat() {
@@ -134,113 +149,90 @@ const greetings = [
   }
   
   function createChatLi(message, className) {
-    const chatLi = document.createElement("li");
-    chatLi.classList.add("chat", className);
-    if (className === "outgoing") {
-      chatLi.innerHTML = `<p></p>`;
-      chatLi.querySelector("p").textContent = message;
+    const li = document.createElement("li");
+    li.className = `chat ${className}`;
+    if (className === "incoming") {
+      li.innerHTML = `<span class="material-symbols-outlined">smart_toy</span><p></p>`;
+      li.querySelector("p").textContent = message;
     } else {
-      chatLi.innerHTML = `<span class="material-symbols-outlined">smart_toy</span><p></p>`;
-      chatLi.querySelector("p").textContent = message;
+      li.textContent = message;
     }
-    return chatLi;
+    return li;
   }
   
   async function generateResponse(chatElement) {
     const messageElement = chatElement.querySelector("p");
-    const userMessage = messageHistory[messageHistory.length -1].text.toLowerCase();
   
-    if (userMessage.includes("who created you") || userMessage.includes("who made you")) {
-      messageElement.textContent = "I am ChefBot, created by Joshua The.";
-      scrollChat();
-      return;
-    }
-    if (isFirstMessage) {
-      messageElement.textContent = "Hi! I’m ChefBot, created by Joshua The. How can I assist you today?";
-      isFirstMessage = false;
-      scrollChat();
-      return;
-    }
+    // Add user's message to history
+    const userMessage = messageHistory[messageHistory.length - 1].content.text;
+    
+    // Prepare messages for Gemini API (user + assistant)
+    // Include chat history, max last 6 messages for context
+    const messagesForAPI = messageHistory.slice(-6);
   
-    // Build the API request body using messageHistory
     const body = {
+      messages: messagesForAPI,
       temperature: 0.7,
       candidateCount: 1,
-      maxOutputTokens: 512,
-      prompt: {
-        messages: messageHistory.map(msg => ({
-          author: msg.role === "user" ? "user" : "assistant",
-          content: { text: msg.text }
-        })),
-        context: "You are ChefBot, a friendly meal planning assistant."
-      }
-    };
-  
-    // IMPORTANT: Remove unsupported fields or change body to match Gemini API v1beta specs!
-    // The error you had is because `prompt` and `temperature` are not top-level accepted keys.
-    // Gemini expects something like:
-    // {
-    //   "model": "gemini-1.5-flash",
-    //   "prompt": {
-    //     "messages": [...]
-    //   },
-    //   "temperature": 0.7,
-    //   ...
-    // }
-    // But your endpoint already includes the model in the URL, so just send "prompt" as top-level.
-    // So we must send "prompt" only, no temperature or candidateCount in body.
-    // We'll fix by sending only "prompt" with messages and context.
-  
-    const fixedBody = {
-      prompt: {
-        messages: messageHistory.map(msg => ({
-          author: msg.role === "user" ? "user" : "assistant",
-          content: { text: msg.text }
-        })),
-        context: "You are ChefBot, a friendly meal planning assistant."
-      }
+      maxOutputTokens: 256
     };
   
     try {
-      const res = await fetch(API_URL, {
+      const response = await fetch(API_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(fixedBody),
+        body: JSON.stringify(body),
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error.message || "API error");
   
-      const responseText = data.candidates?.[0]?.content?.text || "Sorry, I didn’t understand that.";
-      messageElement.textContent = responseText;
-      messageHistory.push({ role: "assistant", text: responseText });
-    } catch (err) {
+      const data = await response.json();
+  
+      if (!response.ok) throw new Error(data.error?.message || "API Error");
+  
+      const botReply = data.candidates?.[0]?.message?.content?.text || "No response";
+  
+      messageElement.textContent = botReply;
+  
+      // Add bot reply to message history
+      messageHistory.push({
+        author: "assistant",
+        content: { text: botReply },
+      });
+  
+    } catch (error) {
       messageElement.classList.add("error");
-      messageElement.textContent = err.message;
+      messageElement.textContent = error.message;
     } finally {
-      scrollChat();
+      chatElement.scrollIntoView({ behavior: "smooth", block: "end" });
     }
-  }
-  
-  function scrollChat() {
-    const chatbox = document.getElementById("chat-messages");
-    chatbox.scrollTop = chatbox.scrollHeight;
   }
   
   function handleChat() {
     const input = document.getElementById("chat-input");
-    const userMessage = input.value.trim();
-    if (!userMessage) return;
+    const text = input.value.trim();
+    if (!text) return;
+  
     input.value = "";
-    messageHistory.push({ role: "user", text: userMessage });
+    input.style.height = "auto";
   
+    // Show user message
     const chatbox = document.getElementById("chat-messages");
-    chatbox.appendChild(createChatLi(userMessage, "outgoing"));
-    scrollChat();
+    const userLi = createChatLi(text, "outgoing");
+    chatbox.appendChild(userLi);
+    chatbox.scrollTop = chatbox.scrollHeight;
   
+    // Add user message to history
+    messageHistory.push({
+      author: "user",
+      content: { text },
+    });
+  
+    // Show "Thinking..."
     const thinkingLi = createChatLi("Thinking...", "incoming");
     chatbox.appendChild(thinkingLi);
-    scrollChat();
+    chatbox.scrollTop = chatbox.scrollHeight;
   
+    // Get bot response
     generateResponse(thinkingLi);
   }
+  
   
