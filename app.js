@@ -254,7 +254,7 @@ const greetings = [
     const userMessage = messageHistory[messageHistory.length - 1].parts[0].text;
   
     try {
-      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=AIzaSyBmvvOHdCEkqg8UYVh2tVoe2EFEV5rLYvE`, {
+      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=AIzaSyBmvvOHdCEkqg8UYVh2tVoe2EFEV5rLYvE`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
