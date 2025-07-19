@@ -6,7 +6,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black" />
   <meta name="apple-mobile-web-app-title" content="MealMapper" />
-  <link rel="apple-touch-icon" href="logo.png" />
+  <meta name="apple-mobile-web-app-touch-icon" href="logo.png" />
   <title>MealMapper - ChefBot</title>
   <link rel="stylesheet" href="styles.css" />
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
@@ -32,7 +32,7 @@
       <table id="meal-table">
         <thead>
           <tr>
-            <th>Meal \ Day</th>
+            <th></th>
             <th>Monday</th>
             <th>Tuesday</th>
             <th>Wednesday</th>
@@ -43,17 +43,46 @@
           </tr>
         </thead>
         <tbody>
-          <tr id="breakfast-row">
+          <!-- Breakfast Section -->
+          <tr class="meal-header">
             <th>Breakfast</th>
-            <!-- Breakfast cells will be inserted here by JavaScript -->
+            <!-- Filled by JavaScript -->
           </tr>
-          <tr id="lunch-row">
+          <tr class="health-row">
+            <th>Health</th>
+            <!-- Filled by JavaScript -->
+          </tr>
+          <tr class="percent-row">
+            <th>Score</th>
+            <!-- Filled by JavaScript -->
+          </tr>
+          
+          <!-- Lunch Section -->
+          <tr class="meal-header">
             <th>Lunch</th>
-            <!-- Lunch cells will be inserted here by JavaScript -->
+            <!-- Filled by JavaScript -->
           </tr>
-          <tr id="dinner-row">
+          <tr class="health-row">
+            <th>Health</th>
+            <!-- Filled by JavaScript -->
+          </tr>
+          <tr class="percent-row">
+            <th>Score</th>
+            <!-- Filled by JavaScript -->
+          </tr>
+          
+          <!-- Dinner Section -->
+          <tr class="meal-header">
             <th>Dinner</th>
-            <!-- Dinner cells will be inserted here by JavaScript -->
+            <!-- Filled by JavaScript -->
+          </tr>
+          <tr class="health-row">
+            <th>Health</th>
+            <!-- Filled by JavaScript -->
+          </tr>
+          <tr class="percent-row">
+            <th>Score</th>
+            <!-- Filled by JavaScript -->
           </tr>
         </tbody>
       </table>

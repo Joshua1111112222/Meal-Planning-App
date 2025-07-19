@@ -169,7 +169,6 @@
     font-weight: bold;
   }
   
-  /* Health color classes */
   .health-0 { background-color: rgba(244, 67, 54, 0.1); }
   .health-1 { background-color: rgba(244, 67, 54, 0.2); }
   .health-2 { background-color: rgba(244, 67, 54, 0.3); }

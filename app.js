@@ -15,23 +15,6 @@ const greetings = [
   let messageHistory = [];
   let aiChatVisible = false;
   
-  // DOM Elements
-  const loginScreen = document.getElementById("login-screen");
-  const welcomeScreen = document.getElementById("welcome-screen");
-  const appScreen = document.getElementById("app-screen");
-  const usernameInput = document.getElementById("username");
-  const loginBtn = document.getElementById("login-btn");
-  const greetingElement = document.getElementById("greeting");
-  const saveBtn = document.getElementById("save-meals");
-  const saveMessage = document.getElementById("save-message");
-  const mealTable = document.getElementById("meal-table");
-  const chatToggler = document.querySelector(".chatbot-toggler");
-  const chatbot = document.querySelector(".chatbot");
-  const closeBtn = document.querySelector(".close-btn");
-  const chatInput = document.getElementById("chat-input");
-  const sendBtn = document.querySelector(".chat-input span");
-  const chatMessages = document.getElementById("chat-messages");
-  
   // Initialize the app
   window.onload = () => {
     const username = localStorage.getItem("username");
@@ -41,13 +24,13 @@ const greetings = [
       showScreen("login-screen");
     }
   
-    // Event listeners
-    loginBtn.addEventListener("click", login);
-    saveBtn.addEventListener("click", saveMealsToStorage);
-    chatToggler.addEventListener("click", toggleChat);
-    closeBtn.addEventListener("click", closeChat);
-    chatInput.addEventListener("keydown", handleChatInput);
-    sendBtn.addEventListener("click", handleChat);
+    // Setup event listeners
+    document.getElementById("login-btn").addEventListener("click", login);
+    document.getElementById("save-meals").addEventListener("click", saveMealsToStorage);
+    document.querySelector(".chatbot-toggler").addEventListener("click", toggleChat);
+    document.querySelector(".close-btn").addEventListener("click", closeChat);
+    document.getElementById("chat-input").addEventListener("keydown", handleChatInput);
+    document.querySelector(".chat-input span").addEventListener("click", handleChat);
   
     // Build the meal table
     buildMealTable();
@@ -55,13 +38,13 @@ const greetings = [
   };
   
   function showScreen(screenId) {
-    [loginScreen, welcomeScreen, appScreen].forEach(screen => {
-      screen.style.display = screen === document.getElementById(screenId) ? "flex" : "none";
+    document.querySelectorAll(".screen").forEach(screen => {
+      screen.style.display = screen.id === screenId ? "flex" : "none";
     });
   }
   
   function login() {
-    const username = usernameInput.value.trim();
+    const username = document.getElementById("username").value.trim();
     if (!username) {
       alert("Please enter your name.");
       return;
@@ -72,7 +55,7 @@ const greetings = [
   
   function showWelcome(username) {
     const randomGreeting = greetings[Math.floor(Math.random() * greetings.length)];
-    greetingElement.textContent = randomGreeting.replace("NAME", username);
+    document.getElementById("greeting").textContent = randomGreeting.replace("NAME", username);
     showScreen("welcome-screen");
     
     setTimeout(() => {
@@ -82,26 +65,35 @@ const greetings = [
   }
   
   function buildMealTable() {
-    // Create cells for each meal row
+    // Create cells for each meal section
     meals.forEach(meal => {
-      const row = document.getElementById(`${meal.toLowerCase()}-row`);
+      const mealRow = document.querySelector(`.meal-header:nth-child(${meals.indexOf(meal) * 3 + 1}`);
+      const healthRow = mealRow.nextElementSibling;
+      const percentRow = healthRow.nextElementSibling;
       
       days.forEach(day => {
-        const cell = document.createElement("td");
-        cell.className = "meal-cell";
-        cell.innerHTML = `
-          <input class="meal-input" type="text" id="${day}-${meal}" placeholder="Enter ${meal}" />
-          <input class="health-slider" type="range" min="0" max="100" value="50" id="${day}-${meal}-score" />
-          <div class="slider-value" id="${day}-${meal}-value">50%</div>
-        `;
-        row.appendChild(cell);
+        // Meal input cell
+        const mealCell = document.createElement("td");
+        mealCell.innerHTML = `<input class="meal-input" type="text" id="${day}-${meal}" placeholder="Enter ${meal}" />`;
+        mealRow.appendChild(mealCell);
         
-        // Setup slider event
-        const slider = cell.querySelector(".health-slider");
-        const valueDisplay = cell.querySelector(".slider-value");
+        // Health bar cell
+        const healthCell = document.createElement("td");
+        healthCell.innerHTML = `<input class="health-slider" type="range" min="0" max="100" value="50" id="${day}-${meal}-health" />`;
+        healthRow.appendChild(healthCell);
+        
+        // Percentage cell
+        const percentCell = document.createElement("td");
+        percentCell.innerHTML = `<span class="slider-value" id="${day}-${meal}-percent">50%</span>`;
+        percentRow.appendChild(percentCell);
+        
+        // Add event listener to health slider
+        const slider = healthCell.querySelector(".health-slider");
+        const percent = percentCell.querySelector(".slider-value");
+        
         slider.addEventListener("input", () => {
           const value = slider.value;
-          valueDisplay.textContent = `${value}%`;
+          percent.textContent = `${value}%`;
           updateHealthColors();
         });
       });
@@ -111,17 +103,17 @@ const greetings = [
   function updateHealthColors() {
     days.forEach(day => {
       meals.forEach(meal => {
-        const slider = document.getElementById(`${day}-${meal}-score`);
+        const slider = document.getElementById(`${day}-${meal}-health`);
         if (!slider) return;
         
         const value = parseInt(slider.value);
         const healthLevel = Math.min(Math.floor(value / 10), 10);
-        const cell = slider.closest("td");
+        const percentElement = document.getElementById(`${day}-${meal}-percent`);
         
         // Remove all health classes
-        cell.classList.remove(...Array.from({ length: 11 }, (_, i) => `health-${i}`));
+        percentElement.classList.remove(...Array.from({ length: 11 }, (_, i) => `health-${i}`));
         // Add the appropriate health class
-        cell.classList.add(`health-${healthLevel}`);
+        percentElement.classList.add(`health-${healthLevel}`);
       });
     });
   }
@@ -133,7 +125,7 @@ const greetings = [
       mealData[day] = {};
       meals.forEach(meal => {
         const mealInput = document.getElementById(`${day}-${meal}`);
-        const healthInput = document.getElementById(`${day}-${meal}-score`);
+        const healthInput = document.getElementById(`${day}-${meal}-health`);
         
         mealData[day][meal] = {
           meal: mealInput.value,
@@ -145,9 +137,9 @@ const greetings = [
     localStorage.setItem("mealData", JSON.stringify(mealData));
     
     // Show save confirmation
-    saveMessage.textContent = "Meal plan saved successfully!";
+    document.getElementById("save-message").textContent = "Meal plan saved successfully!";
     setTimeout(() => {
-      saveMessage.textContent = "";
+      document.getElementById("save-message").textContent = "";
     }, 2000);
   }
   
@@ -163,13 +155,13 @@ const greetings = [
         if (!dayMeal) return;
         
         const mealInput = document.getElementById(`${day}-${meal}`);
-        const healthInput = document.getElementById(`${day}-${meal}-score`);
-        const valueDisplay = document.getElementById(`${day}-${meal}-value`);
+        const healthInput = document.getElementById(`${day}-${meal}-health`);
+        const percentElement = document.getElementById(`${day}-${meal}-percent`);
         
-        if (mealInput && healthInput && valueDisplay) {
+        if (mealInput && healthInput && percentElement) {
           mealInput.value = dayMeal.meal;
           healthInput.value = dayMeal.healthScore;
-          valueDisplay.textContent = `${dayMeal.healthScore}%`;
+          percentElement.textContent = `${dayMeal.healthScore}%`;
         }
       });
     });
@@ -181,7 +173,7 @@ const greetings = [
     aiChatVisible = !aiChatVisible;
     document.body.classList.toggle("show-chatbot", aiChatVisible);
     if (aiChatVisible) {
-      chatInput.focus();
+      document.getElementById("chat-input").focus();
     }
   }
   
@@ -198,12 +190,12 @@ const greetings = [
   }
   
   function handleChat() {
-    const message = chatInput.value.trim();
+    const message = document.getElementById("chat-input").value.trim();
     if (!message) return;
     
     // Add user message to chat
     addChatMessage(message, "outgoing");
-    chatInput.value = "";
+    document.getElementById("chat-input").value = "";
     
     // Show "Thinking..." message
     const thinkingMessage = addChatMessage("Thinking...", "incoming");
@@ -213,6 +205,7 @@ const greetings = [
   }
   
   function addChatMessage(message, type) {
+    const chatbox = document.getElementById("chat-messages");
     const li = document.createElement("li");
     li.className = `chat ${type}`;
     
@@ -225,8 +218,8 @@ const greetings = [
       li.textContent = message;
     }
     
-    chatMessages.appendChild(li);
-    chatMessages.scrollTop = chatMessages.scrollHeight;
+    chatbox.appendChild(li);
+    chatbox.scrollTop = chatbox.scrollHeight;
     
     return li.querySelector("p") || li;
   }
@@ -245,7 +238,7 @@ const greetings = [
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           contents: [{
-            parts: [{ text: `You are ChefBot, a helpful cooking assistant. Help the user with anything they ask and if you don't know take your best guess or say, "I apologize I am still currently testing please be patient with me and I will try again next time". ${userMessage}` }]
+            parts: [{ text: `You are ChefBot, a helpful cooking assistant. Be concise. ${userMessage}` }]
           }]
         })
       });
