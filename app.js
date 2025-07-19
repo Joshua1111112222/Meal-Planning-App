@@ -12,55 +12,26 @@ const greetings = [
   const days = ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"];
   const meals = ["Breakfast","Lunch","Dinner"];
   
-  let generator, aiChatVisible = false;
+  let aiChatVisible = false;
+  let messageHistory = []; // for AI conversation context
   
-  const AI_NAME = "ChefBot";  // AI assistant name
-  const CREATOR_NAME = "Joshua The";  // Your name
-  const SYSTEM_PROMPT = `You are ${AI_NAME}, an AI assistant created by ${CREATOR_NAME}. Your purpose is to help users plan meals, answer questions about meal planning, and be friendly and helpful.`;
-  
-  // Called once per page load
   window.onload = () => {
     if (localStorage.getItem("username")) showWelcome();
-  
     document.getElementById("login-btn").onclick = login;
     document.getElementById("save-meals").onclick = saveMealsToStorage;
-    document.getElementById("chat-toggle").onclick = () => {
-      toggleChat();
-      if (aiChatVisible) sendAIWelcome();
-    };
-  
-    document.getElementById("chat-form").onsubmit = async e => {
-      e.preventDefault();
-      const msg = document.getElementById("chat-input").value.trim();
-      if (!msg) return;
-      document.getElementById("chat-input").value = "";
-      await chatWithAI(msg);
-    };
-  
-    // Add close X button to AI chat panel
-    const aiChat = document.getElementById("ai-chat");
-    const closeBtn = document.createElement("button");
-    closeBtn.textContent = "×";
-    closeBtn.id = "chat-close-btn";
-    closeBtn.style.cssText = `
-      position: absolute;
-      top: 5px; right: 8px;
-      font-size: 24px;
-      background: transparent;
-      border: none;
-      cursor: pointer;
-      color: #888;
-    `;
-    closeBtn.title = "Close AI Chat";
-    closeBtn.onclick = () => {
-      aiChat.style.display = "none";
+    document.querySelector(".chatbot-toggler").onclick = toggleChat;
+    document.querySelector(".chat-input span").onclick = handleChat;
+    document.querySelector(".chat-input textarea").oninput = autoGrowTextarea;
+    document.querySelector(".chat-input textarea").addEventListener("keydown", e => {
+      if(e.key === "Enter" && !e.shiftKey){
+        e.preventDefault();
+        handleChat();
+      }
+    });
+    document.querySelector(".close-btn").onclick = () => {
       aiChatVisible = false;
+      document.body.classList.remove("show-chatbot");
     };
-    aiChat.style.position = "relative";
-    aiChat.appendChild(closeBtn);
-  
-    // If chat is visible on load, send welcome message
-    if (aiChatVisible) sendAIWelcome();
   };
   
   function login() {
@@ -81,9 +52,14 @@ const greetings = [
       ws.style.opacity = 0;
       setTimeout(() => {
         ws.style.display = "none";
-        document.getElementById("app-screen").style.display = "block";
+        document.getElementById("app-screen").style.display = "flex";
         buildTable();
         loadMealsFromStorage();
+        document.getElementById("app-screen").focus();
+        // Reset chat history for new session
+        messageHistory = [];
+        // Send welcome AI message to chatbox
+        addBotMessage(`Hi! I'm ChefBot, created by Joshua The. How can I assist you today?`);
       }, 500);
     }, 2500);
   }
@@ -130,8 +106,9 @@ const greetings = [
       });
     });
     localStorage.setItem("meals", JSON.stringify(data));
-    document.getElementById("save-message").textContent = "Meal plan saved!";
-    setTimeout(() => document.getElementById("save-message").textContent = "", 2000);
+    const msgElem = document.getElementById("save-message");
+    msgElem.textContent = "Meal plan saved!";
+    setTimeout(() => msgElem.textContent = "", 2000);
   }
   
   function loadMealsFromStorage() {
@@ -147,56 +124,117 @@ const greetings = [
     }));
   }
   
-  async function loadModel() {
-    if (!generator && window.transformers?.pipeline) {
-      generator = await window.transformers.pipeline("text-generation", "Xenova/gpt2");
-    }
-  }
-  
   function toggleChat() {
     aiChatVisible = !aiChatVisible;
-    document.getElementById("ai-chat").style.display = aiChatVisible ? "flex" : "none";
-    if (aiChatVisible) document.getElementById("chat-input").focus();
+    document.body.classList.toggle("show-chatbot", aiChatVisible);
+    if (aiChatVisible) {
+      const textarea = document.querySelector(".chat-input textarea");
+      textarea.focus();
+    }
   }
   
   function appendMessage(text, cls) {
-    const div = document.createElement("div");
-    div.textContent = text;
-    div.classList.add("message", cls);
-    document.getElementById("chat-messages").appendChild(div);
-    document.getElementById("chat-messages").scrollTop = 
-      document.getElementById("chat-messages").scrollHeight;
-  }
-  
-  let firstWelcomeSent = false;
-  function sendAIWelcome() {
-    if (firstWelcomeSent) return;
-    firstWelcomeSent = true;
-    appendMessage(`${AI_NAME} here, created by ${CREATOR_NAME}. How can I assist you today?`, "ai-message");
-  }
-  
-  async function chatWithAI(msg) {
-    appendMessage(msg, "user-message");
-    appendMessage("AI is thinking…", "ai-message");
-    await loadModel();
-    if (!generator) {
-      document.querySelector("#chat-messages .ai-message:last-child").remove();
-      return appendMessage("AI unavailable.", "ai-message");
+    const chatbox = document.querySelector(".chatbox");
+    const li = document.createElement("li");
+    li.classList.add("chat", cls);
+    if (cls === "incoming") {
+      li.innerHTML = `<span class="material-symbols-outlined">smart_toy</span><p></p>`;
+      li.querySelector("p").textContent = text;
+    } else {
+      li.textContent = text;
     }
+    chatbox.appendChild(li);
+    chatbox.scrollTop = chatbox.scrollHeight;
+  }
   
-    const mealsJson = localStorage.getItem("meals") || "{}";
+  function addBotMessage(text) {
+    appendMessage(text, "incoming");
+    messageHistory.push({ role: "assistant", text });
+  }
   
-    const prompt = `${SYSTEM_PROMPT}\nUser meals data: ${mealsJson}\nUser says: ${msg}\nAI:`;
+  function addUserMessage(text) {
+    appendMessage(text, "outgoing");
+    messageHistory.push({ role: "user", text });
+  }
+  
+  function autoGrowTextarea() {
+    const textarea = this;
+    textarea.style.height = "auto";
+    textarea.style.height = textarea.scrollHeight + "px";
+  }
+  
+  async function handleChat() {
+    const textarea = document.querySelector(".chat-input textarea");
+    const msg = textarea.value.trim();
+    if (!msg) return;
+    textarea.value = "";
+    autoGrowTextarea.call(textarea);
+  
+    addUserMessage(msg);
+    addBotMessage("Thinking...");
   
     try {
-      const out = await generator(prompt, { max_length: 100 });
-      let resp = out[0].generated_text.replace(prompt, "").trim();
-      document.querySelector("#chat-messages .ai-message:last-child").remove();
-      resp = resp || "Sorry, I can't answer that right now.";
-      appendMessage(resp, "ai-message");
-    } catch (e) {
-      document.querySelector("#chat-messages .ai-message:last-child").remove();
-      appendMessage("Error generating AI response.", "ai-message");
+      const responseText = await fetchGeminiResponse(msg);
+      // Remove last "Thinking..." message
+      const chatbox = document.querySelector(".chatbox");
+      const chats = chatbox.querySelectorAll("li.incoming");
+      if (chats.length) chats[chats.length - 1].remove();
+  
+      addBotMessage(responseText);
+    } catch (error) {
+      // Remove last "Thinking..." message
+      const chatbox = document.querySelector(".chatbox");
+      const chats = chatbox.querySelectorAll("li.incoming");
+      if (chats.length) chats[chats.length - 1].remove();
+  
+      appendMessage(`Error: ${error.message}`, "incoming");
     }
+  }
+  
+  async function fetchGeminiResponse(userMsg) {
+    // Push the current user message into history first
+    messageHistory.push({ role: "user", text: userMsg });
+  
+    // Build the full conversation context with system prompt
+    const systemPrompt = {
+      role: "system",
+      text: "You are ChefBot, an AI created by Joshua The. Your purpose is to assist with meal planning and friendly chat."
+    };
+  
+    const messages = [systemPrompt, ...messageHistory];
+  
+    const API_KEY = "AIzaSyBmvvOHdCEkqg8UYVh2tVoe2EFEV5rLYvE"; // For testing only, replace or use env var later
+    const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`;
+  
+    const body = {
+      prompt: {
+        messages: messages.map(msg => ({
+          author: { role: msg.role },
+          content: { text: msg.text }
+        }))
+      },
+      temperature: 0.7,
+      candidate_count: 1,
+      max_output_tokens: 150,
+    };
+  
+    const res = await fetch(API_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body)
+    });
+  
+    if (!res.ok) {
+      const err = await res.json();
+      throw new Error(err.error?.message || "Unknown API error");
+    }
+  
+    const data = await res.json();
+    const text = data.candidates?.[0]?.content?.text?.trim() || "Sorry, I can't answer that.";
+  
+    // Add assistant response to message history
+    messageHistory.push({ role: "assistant", text });
+  
+    return text;
   }
   
