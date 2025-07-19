@@ -122,7 +122,7 @@ const greetings = [
         // Meal input cell
         const mealCell = document.createElement("td");
         mealCell.className = "meal-cell";
-        mealCell.innerHTML = `<input class="meal-input" type="text" id="${day}-${meal}" placeholder="What's for ${meal}?" />`;
+        mealCell.innerHTML = `<input class="meal-input" type="text" id="${day}-${meal}"${meal}?" />`;
         mealRow.appendChild(mealCell);
         
         // Health slider cell
