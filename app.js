@@ -12,26 +12,23 @@ const greetings = [
   const days = ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"];
   const meals = ["Breakfast","Lunch","Dinner"];
   
-  let aiChatVisible = false;
-  let messageHistory = []; // for AI conversation context
+  let generator, aiChatVisible = false;
   
   window.onload = () => {
     if (localStorage.getItem("username")) showWelcome();
     document.getElementById("login-btn").onclick = login;
     document.getElementById("save-meals").onclick = saveMealsToStorage;
     document.querySelector(".chatbot-toggler").onclick = toggleChat;
-    document.querySelector(".chat-input span").onclick = handleChat;
-    document.querySelector(".chat-input textarea").oninput = autoGrowTextarea;
-    document.querySelector(".chat-input textarea").addEventListener("keydown", e => {
-      if(e.key === "Enter" && !e.shiftKey){
+    document.querySelector(".close-btn").onclick = closeChat;
+    document.getElementById("chat-input").addEventListener("keydown", e => {
+      if (e.key === "Enter" && !e.shiftKey) {
         e.preventDefault();
         handleChat();
       }
     });
-    document.querySelector(".close-btn").onclick = () => {
-      aiChatVisible = false;
-      document.body.classList.remove("show-chatbot");
-    };
+    document.querySelector(".chat-input span[role='button']").onclick = handleChat;
+    buildTable();
+    loadMealsFromStorage();
   };
   
   function login() {
@@ -53,13 +50,6 @@ const greetings = [
       setTimeout(() => {
         ws.style.display = "none";
         document.getElementById("app-screen").style.display = "flex";
-        buildTable();
-        loadMealsFromStorage();
-        document.getElementById("app-screen").focus();
-        // Reset chat history for new session
-        messageHistory = [];
-        // Send welcome AI message to chatbox
-        addBotMessage(`Hi! I'm ChefBot, created by Joshua The. How can I assist you today?`);
       }, 500);
     }, 2500);
   }
@@ -106,9 +96,9 @@ const greetings = [
       });
     });
     localStorage.setItem("meals", JSON.stringify(data));
-    const msgElem = document.getElementById("save-message");
-    msgElem.textContent = "Meal plan saved!";
-    setTimeout(() => msgElem.textContent = "", 2000);
+    const sm = document.getElementById("save-message");
+    sm.textContent = "Meal plan saved!";
+    setTimeout(() => sm.textContent = "", 2000);
   }
   
   function loadMealsFromStorage() {
@@ -124,117 +114,133 @@ const greetings = [
     }));
   }
   
+  // === AI Chatbot with Google Gemini API ===
+  
+  const API_KEY = "AIzaSyBmvvOHdCEkqg8UYVh2tVoe2EFEV5rLYvE"; 
+  const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`;
+  
+  let isFirstMessage = true;
+  let messageHistory = [];
+  
   function toggleChat() {
     aiChatVisible = !aiChatVisible;
-    document.body.classList.toggle("show-chatbot", aiChatVisible);
-    if (aiChatVisible) {
-      const textarea = document.querySelector(".chat-input textarea");
-      textarea.focus();
+    if (aiChatVisible) document.body.classList.add("show-chatbot");
+    else document.body.classList.remove("show-chatbot");
+  }
+  
+  function closeChat() {
+    aiChatVisible = false;
+    document.body.classList.remove("show-chatbot");
+  }
+  
+  function createChatLi(message, className) {
+    const chatLi = document.createElement("li");
+    chatLi.classList.add("chat", className);
+    if (className === "outgoing") {
+      chatLi.innerHTML = `<p></p>`;
+      chatLi.querySelector("p").textContent = message;
+    } else {
+      chatLi.innerHTML = `<span class="material-symbols-outlined">smart_toy</span><p></p>`;
+      chatLi.querySelector("p").textContent = message;
+    }
+    return chatLi;
+  }
+  
+  async function generateResponse(chatElement) {
+    const messageElement = chatElement.querySelector("p");
+    const userMessage = messageHistory[messageHistory.length -1].text.toLowerCase();
+  
+    if (userMessage.includes("who created you") || userMessage.includes("who made you")) {
+      messageElement.textContent = "I am ChefBot, created by Joshua The.";
+      scrollChat();
+      return;
+    }
+    if (isFirstMessage) {
+      messageElement.textContent = "Hi! I’m ChefBot, created by Joshua The. How can I assist you today?";
+      isFirstMessage = false;
+      scrollChat();
+      return;
+    }
+  
+    // Build the API request body using messageHistory
+    const body = {
+      temperature: 0.7,
+      candidateCount: 1,
+      maxOutputTokens: 512,
+      prompt: {
+        messages: messageHistory.map(msg => ({
+          author: msg.role === "user" ? "user" : "assistant",
+          content: { text: msg.text }
+        })),
+        context: "You are ChefBot, a friendly meal planning assistant."
+      }
+    };
+  
+    // IMPORTANT: Remove unsupported fields or change body to match Gemini API v1beta specs!
+    // The error you had is because `prompt` and `temperature` are not top-level accepted keys.
+    // Gemini expects something like:
+    // {
+    //   "model": "gemini-1.5-flash",
+    //   "prompt": {
+    //     "messages": [...]
+    //   },
+    //   "temperature": 0.7,
+    //   ...
+    // }
+    // But your endpoint already includes the model in the URL, so just send "prompt" as top-level.
+    // So we must send "prompt" only, no temperature or candidateCount in body.
+    // We'll fix by sending only "prompt" with messages and context.
+  
+    const fixedBody = {
+      prompt: {
+        messages: messageHistory.map(msg => ({
+          author: msg.role === "user" ? "user" : "assistant",
+          content: { text: msg.text }
+        })),
+        context: "You are ChefBot, a friendly meal planning assistant."
+      }
+    };
+  
+    try {
+      const res = await fetch(API_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(fixedBody),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error.message || "API error");
+  
+      const responseText = data.candidates?.[0]?.content?.text || "Sorry, I didn’t understand that.";
+      messageElement.textContent = responseText;
+      messageHistory.push({ role: "assistant", text: responseText });
+    } catch (err) {
+      messageElement.classList.add("error");
+      messageElement.textContent = err.message;
+    } finally {
+      scrollChat();
     }
   }
   
-  function appendMessage(text, cls) {
-    const chatbox = document.querySelector(".chatbox");
-    const li = document.createElement("li");
-    li.classList.add("chat", cls);
-    if (cls === "incoming") {
-      li.innerHTML = `<span class="material-symbols-outlined">smart_toy</span><p></p>`;
-      li.querySelector("p").textContent = text;
-    } else {
-      li.textContent = text;
-    }
-    chatbox.appendChild(li);
+  function scrollChat() {
+    const chatbox = document.getElementById("chat-messages");
     chatbox.scrollTop = chatbox.scrollHeight;
   }
   
-  function addBotMessage(text) {
-    appendMessage(text, "incoming");
-    messageHistory.push({ role: "assistant", text });
-  }
+  function handleChat() {
+    const input = document.getElementById("chat-input");
+    const userMessage = input.value.trim();
+    if (!userMessage) return;
+    input.value = "";
+    messageHistory.push({ role: "user", text: userMessage });
   
-  function addUserMessage(text) {
-    appendMessage(text, "outgoing");
-    messageHistory.push({ role: "user", text });
-  }
+    const chatbox = document.getElementById("chat-messages");
+    chatbox.appendChild(createChatLi(userMessage, "outgoing"));
+    scrollChat();
   
-  function autoGrowTextarea() {
-    const textarea = this;
-    textarea.style.height = "auto";
-    textarea.style.height = textarea.scrollHeight + "px";
-  }
+    const thinkingLi = createChatLi("Thinking...", "incoming");
+    chatbox.appendChild(thinkingLi);
+    scrollChat();
   
-  async function handleChat() {
-    const textarea = document.querySelector(".chat-input textarea");
-    const msg = textarea.value.trim();
-    if (!msg) return;
-    textarea.value = "";
-    autoGrowTextarea.call(textarea);
-  
-    addUserMessage(msg);
-    addBotMessage("Thinking...");
-  
-    try {
-      const responseText = await fetchGeminiResponse(msg);
-      // Remove last "Thinking..." message
-      const chatbox = document.querySelector(".chatbox");
-      const chats = chatbox.querySelectorAll("li.incoming");
-      if (chats.length) chats[chats.length - 1].remove();
-  
-      addBotMessage(responseText);
-    } catch (error) {
-      // Remove last "Thinking..." message
-      const chatbox = document.querySelector(".chatbox");
-      const chats = chatbox.querySelectorAll("li.incoming");
-      if (chats.length) chats[chats.length - 1].remove();
-  
-      appendMessage(`Error: ${error.message}`, "incoming");
-    }
-  }
-  
-  async function fetchGeminiResponse(userMsg) {
-    // Push the current user message into history first
-    messageHistory.push({ role: "user", text: userMsg });
-  
-    // Build the full conversation context with system prompt
-    const systemPrompt = {
-      role: "system",
-      text: "You are ChefBot, an AI created by Joshua The. Your purpose is to assist with meal planning and friendly chat."
-    };
-  
-    const messages = [systemPrompt, ...messageHistory];
-  
-    const API_KEY = "AIzaSyBmvvOHdCEkqg8UYVh2tVoe2EFEV5rLYvE"; // For testing only, replace or use env var later
-    const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`;
-  
-    const body = {
-      prompt: {
-        messages: messages.map(msg => ({
-          author: { role: msg.role },
-          content: { text: msg.text }
-        }))
-      },
-      temperature: 0.7,
-      candidate_count: 1,
-      max_output_tokens: 150,
-    };
-  
-    const res = await fetch(API_URL, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body)
-    });
-  
-    if (!res.ok) {
-      const err = await res.json();
-      throw new Error(err.error?.message || "Unknown API error");
-    }
-  
-    const data = await res.json();
-    const text = data.candidates?.[0]?.content?.text?.trim() || "Sorry, I can't answer that.";
-  
-    // Add assistant response to message history
-    messageHistory.push({ role: "assistant", text });
-  
-    return text;
+    generateResponse(thinkingLi);
   }
   

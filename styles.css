@@ -16,6 +16,8 @@ body {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
+  padding-left: 1em;
+  padding-right: 1em;
 }
 
 .screen {
@@ -25,34 +27,60 @@ body {
   align-items: center;
   padding: 1em;
   flex-grow: 1;
+  max-width: 600px;
+  margin: 0 auto;
+  width: 100%;
+  text-align: center;
 }
 
 .center-screen {
   display: flex;
 }
 
-#login-screen input,
-#login-screen button,
-#save-meals {
-  padding: 0.5em 1em;
-  font-size: 1.2em;
-  margin: 0.2em;
-  border-radius: 8px;
+#login-screen h1 {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+  user-select: none;
+}
+
+#login-screen input {
+  padding: 1em;
+  font-size: 1.5rem;
+  margin-bottom: 1rem;
+  border-radius: 10px;
   border: none;
+  max-width: 320px;
+  width: 100%;
   background-color: #2a2a2a;
   color: #e0e0e0;
   box-shadow: 0 0 5px #444;
-  cursor: pointer;
   outline: none;
+}
+
+#login-btn {
+  padding: 1em 1.5em;
+  font-size: 1.5rem;
+  border-radius: 10px;
+  border: none;
+  background-color: #4caf50;
+  color: #121212;
+  cursor: pointer;
+  box-shadow: 0 0 10px #4caf50;
   transition: background-color 0.3s ease;
   max-width: 320px;
   width: 100%;
 }
 
-#login-screen input:focus,
-#login-screen button:hover,
-#save-meals:hover {
-  background-color: #444;
+#login-btn:hover,
+#login-btn:focus {
+  background-color: #45a047;
+  outline: none;
+}
+
+#welcome-screen h2 {
+  font-size: 2.5rem;
+  font-weight: 600;
+  user-select: none;
 }
 
 #app-screen {
@@ -61,6 +89,9 @@ body {
   flex-direction: column;
   align-items: center;
   gap: 1em;
+  max-width: 650px;
+  margin: 0 auto;
+  width: 100%;
 }
 
 h2 {
@@ -71,19 +102,22 @@ h2 {
 table {
   border-collapse: collapse;
   width: 100%;
-  max-width: 650px;
   background-color: #1f1f1f;
   border-radius: 12px;
   overflow: hidden;
+  table-layout: fixed;
+  word-wrap: break-word;
 }
 
 th,
 td {
-  padding: 0.6em 1em;
+  padding: 0.8em 1em;
   text-align: center;
   border: 1px solid #444;
-  font-size: 1rem;
+  font-size: 1.1rem;
   user-select: none;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
 }
 
 .meal-input {
@@ -94,21 +128,21 @@ td {
   border: 1px solid #444;
   border-radius: 6px;
   color: #eee;
+  word-wrap: break-word;
 }
 
 .health-slider {
-    appearance: none;
-    -webkit-appearance: none;
-    -moz-appearance: none;
-    width: 90%;
-    margin-top: 4px;
-    height: 8px;
-    border-radius: 5px;
-    background: linear-gradient(to right, #f44336, #ffeb3b);
-    outline: none;
-    transition: background 0.3s ease;
-  }
-  
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  width: 90%;
+  margin-top: 4px;
+  height: 8px;
+  border-radius: 5px;
+  background: linear-gradient(to right, #f44336, #ffeb3b);
+  outline: none;
+  transition: background 0.3s ease;
+}
 
 .health-slider::-webkit-slider-thumb {
   -webkit-appearance: none;
