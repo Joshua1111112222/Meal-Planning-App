@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Smart AI Meal Planner</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+  <!-- LOGIN SCREEN -->
+  <div id="login-screen">
+    <h1>🥗 Meal Master AI</h1>
+    <input type="text" id="username" placeholder="Enter your name..." />
+    <button onclick="login()">Enter</button>
+  </div>
+
+  <!-- WELCOME SCREEN -->
+  <div id="welcome-screen" style="display:none;">
+    <h2 id="greeting"></h2>
+  </div>
+
+  <!-- MAIN APP -->
+  <div id="app-screen" style="display:none;">
+    <h2>Weekly Meal Planner</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Day</th>
+          <th>Breakfast</th>
+          <th>Lunch</th>
+          <th>Dinner</th>
+        </tr>
+      </thead>
+      <tbody id="meal-table"></tbody>
+    </table>
+    <button onclick="analyze()">Analyze Health</button>
+    <button onclick="editMeals()">AI Edit Meals</button>
+    <pre id="output"></pre>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
