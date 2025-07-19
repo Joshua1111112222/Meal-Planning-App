@@ -12,48 +12,58 @@ const greetings = [
   const days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
   
   let generator; // AI pipeline
+  let aiChatVisible = false;
   
-  async function loadModel() {
-    generator = await window.transformers.pipeline("text-generation", "Xenova/gpt2");
-  }
-  
-  async function login() {
+  // Login logic
+  function login() {
     const name = document.getElementById("username").value.trim();
-    if (name) {
-      localStorage.setItem("username", name);
-      showWelcome();
-    }
+    if (!name) return;
+    localStorage.setItem("username", name);
+    showWelcome();
   }
   
   function showWelcome() {
     document.getElementById("login-screen").style.display = "none";
     const name = localStorage.getItem("username");
     const greet = greetings[Math.floor(Math.random() * greetings.length)].replace("NAME", name);
+    const welcomeScreen = document.getElementById("welcome-screen");
     document.getElementById("greeting").textContent = greet;
-    document.getElementById("welcome-screen").style.display = "block";
+    welcomeScreen.style.display = "flex";
+    welcomeScreen.style.opacity = "1";
   
     setTimeout(() => {
-      document.getElementById("welcome-screen").style.display = "none";
-      document.getElementById("app-screen").style.display = "block";
-      buildTable();
+      // fade out welcome screen
+      welcomeScreen.style.opacity = "0";
+      setTimeout(() => {
+        welcomeScreen.style.display = "none";
+        showAppScreen();
+      }, 500);
     }, 3000);
   }
   
+  function showAppScreen() {
+    document.getElementById("app-screen").style.display = "block";
+    buildTable();
+    loadMealsFromStorage();
+  }
+  
+  // Build meal input table
   function buildTable() {
-    const table = document.getElementById("meal-table");
-    table.innerHTML = "";
+    const tbody = document.querySelector("#meal-table tbody");
+    tbody.innerHTML = "";
     days.forEach(day => {
       const row = document.createElement("tr");
       row.innerHTML = `
         <td>${day}</td>
-        <td><input type="text" id="${day}-breakfast" placeholder="Breakfast" /></td>
-        <td><input type="text" id="${day}-lunch" placeholder="Lunch" /></td>
-        <td><input type="text" id="${day}-dinner" placeholder="Dinner" /></td>
+        <td><input type="text" id="${day}-breakfast" placeholder="Breakfast" autocomplete="off"/></td>
+        <td><input type="text" id="${day}-lunch" placeholder="Lunch" autocomplete="off"/></td>
+        <td><input type="text" id="${day}-dinner" placeholder="Dinner" autocomplete="off"/></td>
       `;
-      table.appendChild(row);
+      tbody.appendChild(row);
     });
   }
   
+  // Save/load meals to localStorage
   function getMeals() {
     let data = {};
     days.forEach(day => {
@@ -66,53 +76,87 @@ const greetings = [
     return data;
   }
   
-  function formatMealsText(meals) {
-    let text = "Here's my weekly meal plan:\n";
-    for (const day of days) {
-      text += `${day}:\n`;
-      text += `Breakfast: ${meals[day].breakfast || "None"}\n`;
-      text += `Lunch: ${meals[day].lunch || "None"}\n`;
-      text += `Dinner: ${meals[day].dinner || "None"}\n\n`;
-    }
-    return text;
+  function saveMealsToStorage() {
+    const meals = getMeals();
+    localStorage.setItem("meals", JSON.stringify(meals));
+    const saveMsg = document.getElementById("save-message");
+    saveMsg.textContent = "Meal plan saved!";
+    setTimeout(() => saveMsg.textContent = "", 2500);
   }
   
-  async function analyze() {
+  function loadMealsFromStorage() {
+    const saved = localStorage.getItem("meals");
+    if (!saved) return;
+    const meals = JSON.parse(saved);
+    days.forEach(day => {
+      document.getElementById(`${day}-breakfast`).value = meals[day]?.breakfast || "";
+      document.getElementById(`${day}-lunch`).value = meals[day]?.lunch || "";
+      document.getElementById(`${day}-dinner`).value = meals[day]?.dinner || "";
+    });
+  }
+  
+  // AI Chat setup
+  
+  async function loadModel() {
     if (!generator) {
-      document.getElementById("output").textContent = "Loading AI model, please wait...";
+      generator = await window.transformers.pipeline("text-generation", "Xenova/gpt2");
+    }
+  }
+  
+  function appendMessage(text, sender = "ai") {
+    const chatMessages = document.getElementById("chat-messages");
+    const div = document.createElement("div");
+    div.classList.add("message", sender === "user" ? "user-message" : "ai-message");
+    div.textContent = text;
+    chatMessages.appendChild(div);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+  }
+  
+  async function chatWithAI(message) {
+    appendMessage(message, "user");
+    if (!generator) {
+      appendMessage("Loading AI model, please wait...", "ai");
       await loadModel();
     }
   
-    toggleButtons(false);
-    const meals = getMeals();
-    const prompt = formatMealsText(meals) + "\nRate the healthiness of this meal plan in a friendly way:";
+    const prompt = `User: ${message}\nAI:`;
+  
     const output = await generator(prompt, { max_length: 100 });
-    document.getElementById("output").textContent = output[0].generated_text;
-    toggleButtons(true);
+    let response = output[0].generated_text.replace(prompt, "").trim();
+  
+    if (!response) response = "Sorry, I couldn't understand that.";
+  
+    appendMessage(response, "ai");
   }
   
-  async function editMeals() {
-    if (!generator) {
-      document.getElementById("output").textContent = "Loading AI model, please wait...";
-      await loadModel();
-    }
-  
-    toggleButtons(false);
-    const meals = getMeals();
-    const prompt = formatMealsText(meals) + "\nSuggest improvements to make this meal plan healthier and more balanced:";
-    const output = await generator(prompt, { max_length: 150 });
-    document.getElementById("output").textContent = output[0].generated_text;
-    toggleButtons(true);
+  // Toggle chat window
+  function toggleChat() {
+    const chat = document.getElementById("ai-chat");
+    aiChatVisible = !aiChatVisible;
+    chat.style.display = aiChatVisible ? "flex" : "none";
   }
   
-  function toggleButtons(enabled) {
-    document.querySelector('button[onclick="analyze()"]').disabled = !enabled;
-    document.querySelector('button[onclick="editMeals()"]').disabled = !enabled;
-  }
+  // Event listeners
   
-  window.onload = async () => {
-    await loadModel();
+  window.onload = () => {
     const name = localStorage.getItem("username");
-    if (name) showWelcome();
+    if (name) {
+      showWelcome();
+    }
   };
+  
+  document.getElementById("login-btn").addEventListener("click", login);
+  
+  document.getElementById("save-meals").addEventListener("click", saveMealsToStorage);
+  
+  document.getElementById("chat-toggle").addEventListener("click", toggleChat);
+  
+  document.getElementById("chat-form").addEventListener("submit", async e => {
+    e.preventDefault();
+    const input = document.getElementById("chat-input");
+    const message = input.value.trim();
+    if (!message) return;
+    input.value = "";
+    await chatWithAI(message);
+  });
   
