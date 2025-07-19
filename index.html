@@ -2,35 +2,52 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Meal Master AI - Weekly Planner</title>
+
+  <!-- PWA & Apple meta tags -->
+  <link rel="manifest" href="manifest.json" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <meta name="apple-mobile-web-app-title" content="MealMapper" />
+  <meta name="apple-mobile-web-app-title" content="Meal Master AI" />
   <link rel="apple-touch-icon" href="logo.png" />
-  <link rel="manifest" href="manifest.json" />
+
+  <!-- Dark Mode base styles -->
+  <style>
+    :root {
+      color-scheme: dark;
+      background-color: #121212;
+      color: #eee;
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    }
+  </style>
+
   <link rel="stylesheet" href="styles.css" />
-  <title>MealMapper</title>
+
+  <!-- Load transformers.js for AI chat -->
+  <script type="module" src="https://cdn.jsdelivr.net/npm/@xenova/transformers@2.3.0/dist/transformers.min.js"></script>
 </head>
 <body>
+
   <!-- LOGIN SCREEN -->
-  <div id="login-screen">
-    <h1>🥗 MealMapper</h1>
-    <input type="text" id="username" placeholder="Enter your name..." />
-    <button onclick="login()">Start Planning</button>
+  <div id="login-screen" class="screen centered">
+    <h1>🥗 Meal Master AI</h1>
+    <input type="text" id="username" placeholder="Enter your name..." autocomplete="off" />
+    <button id="login-btn">Enter</button>
   </div>
 
   <!-- WELCOME SCREEN -->
-  <div id="welcome-screen" style="display:none;">
+  <div id="welcome-screen" class="screen centered" style="display:none;">
     <h2 id="greeting"></h2>
   </div>
 
-  <!-- MAIN APP -->
+  <!-- MAIN APP SCREEN -->
   <div id="app-screen" style="display:none;">
     <header>
-      <button id="chat-toggle">💬</button>
       <h2>Weekly Meal Planner</h2>
     </header>
-    <table>
+
+    <table id="meal-table" aria-label="Weekly meal planner">
       <thead>
         <tr>
           <th>Day</th>
@@ -39,22 +56,32 @@
           <th>Dinner</th>
         </tr>
       </thead>
-      <tbody id="meal-table"></tbody>
+      <tbody></tbody>
     </table>
-    <button onclick="analyze()">Analyze Health</button>
-    <button onclick="aiEditMeals()">AI Edit Meals</button>
+
+    <button id="save-meals">Save Meal Plan</button>
+
+    <div id="save-message" aria-live="polite" role="alert"></div>
+
+    <!-- AI Chat Toggle Button -->
+    <button id="chat-toggle" aria-label="Toggle AI chat">💬 AI Chat</button>
+
+    <!-- AI Chat Window (hidden by default) -->
+    <div id="ai-chat" aria-live="polite" aria-atomic="false" style="display:none;">
+      <div id="chat-messages" role="log" aria-live="polite" aria-relevant="additions"></div>
+      <form id="chat-form" autocomplete="off" aria-label="AI chat form">
+        <input
+          id="chat-input"
+          type="text"
+          placeholder="Ask AI about your meals..."
+          aria-label="Type your message"
+          required
+        />
+        <button type="submit" aria-label="Send message">Send</button>
+      </form>
+    </div>
   </div>
 
-  <!-- CHAT -->
-  <div id="chat-box" style="display:none;">
-    <form id="chat-form">
-      <input id="chat-input" placeholder="Ask MealMapper..." />
-      <button type="submit">➤</button>
-    </form>
-    <div id="chat-output"></div>
-  </div>
-
-  <script src="https://cdn.jsdelivr.net/npm/@xenova/transformers"></script>
-  <script src="app.js"></script>
+  <script type="module" src="app.js"></script>
 </body>
 </html>
