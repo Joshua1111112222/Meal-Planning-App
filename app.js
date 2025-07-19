@@ -60,7 +60,7 @@ const greetings = [
     return data;
   }
   
-  const BACKEND_URL = "https://smart-meal-ai.onrender.com"; // ← your real backend
+  const BACKEND_URL = "https://meal-planning-app-backend.onrender.com";
 
 async function analyze() {
   const response = await fetch(`${BACKEND_URL}/analyze`, {
